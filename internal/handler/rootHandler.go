@@ -28,6 +28,7 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	w.Header().Add("Location", url)
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 
 	// w.Header().Add("Content-Type", "text/plain")
