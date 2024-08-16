@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"fmt"
 	"io"
 	"net/http"
 	"strings"
@@ -25,7 +24,6 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
 
 	arr := strings.Split(r.URL.Path, "/")
 	id := arr[len(arr)-1]
-	fmt.Println(id)
 
 	url, err := storage.TempStorage.Get(id)
 	if err != nil {
@@ -33,14 +31,10 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Add("Content-Type", "text/plain")
-	w.Header().Add("Location", url)
-	w.WriteHeader(http.StatusTemporaryRedirect)
-	// http.Redirect(w, r, url, http.StatusTemporaryRedirect)
-
 	// w.Header().Add("Content-Type", "text/plain")
+	w.Header().Add("Location", url)
 	// w.WriteHeader(http.StatusTemporaryRedirect)
-	w.Write([]byte(url))
+	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }
 
 func handlePost(w http.ResponseWriter, r *http.Request) {
