@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/hddskull/urlShorty/internal/storage"
 )
@@ -20,8 +21,10 @@ func RootHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleGet(w http.ResponseWriter, r *http.Request) {
-	id := r.URL.Query().Get("id")
+	// id := r.URL.Query().Get("id")
 
+	arr := strings.Split(r.URL.Path, "/")
+	id := arr[len(arr)-1]
 	fmt.Println(id)
 
 	url, err := storage.TempStorage.Get(id)
@@ -32,12 +35,12 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Add("Content-Type", "text/plain")
 	w.Header().Add("Location", url)
-	// w.WriteHeader(http.StatusTemporaryRedirect)
-	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+	w.WriteHeader(http.StatusTemporaryRedirect)
+	// http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 
 	// w.Header().Add("Content-Type", "text/plain")
 	// w.WriteHeader(http.StatusTemporaryRedirect)
-	// w.Write([]byte(url))
+	w.Write([]byte(url))
 }
 
 func handlePost(w http.ResponseWriter, r *http.Request) {
