@@ -51,14 +51,14 @@ func handlePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	bodyS := string(bodyB)
-	processUrl(bodyS)
+	processURL(bodyS)
 
 	w.Header().Add("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("success"))
 }
 
-func processUrl(b string) {
+func processURL(b string) {
 
 	fmt.Println(b)
 
