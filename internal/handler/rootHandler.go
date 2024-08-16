@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+
+	"github.com/hddskull/urlShorty/internal/storage"
 )
 
 func RootHandler(w http.ResponseWriter, r *http.Request) {
@@ -22,26 +24,20 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println(id)
 
-	url, err := getURL(id)
+	url, err := storage.TempStorage.Get(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
+	w.Header().Add("Content-Type", "text/plain")
 	w.Header().Add("Location", url)
+	// w.WriteHeader(http.StatusTemporaryRedirect)
 	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 
 	// w.Header().Add("Content-Type", "text/plain")
 	// w.WriteHeader(http.StatusTemporaryRedirect)
 	// w.Write([]byte(url))
-}
-
-func getURL(id string) (string, error) {
-	if id == "EwHXdJfB" {
-		return "https://practicum.yandex.ru/", nil
-	}
-
-	return "", fmt.Errorf("no url found from id: %s", id)
 }
 
 func handlePost(w http.ResponseWriter, r *http.Request) {
@@ -54,15 +50,13 @@ func handlePost(w http.ResponseWriter, r *http.Request) {
 	}
 
 	bodyS := string(bodyB)
-	processURL(bodyS)
+	id, err := storage.TempStorage.Save(bodyS)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	w.Header().Add("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte("success"))
-}
-
-func processURL(b string) {
-
-	fmt.Println(b)
-
+	w.Write([]byte(id))
 }
