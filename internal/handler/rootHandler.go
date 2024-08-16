@@ -28,9 +28,11 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Add("Content-Type", "text/plain")
-	w.WriteHeader(http.StatusTemporaryRedirect)
-	w.Write([]byte(url))
+	http.Redirect(w, r, url, http.StatusTemporaryRedirect)
+
+	// w.Header().Add("Content-Type", "text/plain")
+	// w.WriteHeader(http.StatusTemporaryRedirect)
+	// w.Write([]byte(url))
 }
 
 func getURL(id string) (string, error) {
