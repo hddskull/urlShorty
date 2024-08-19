@@ -58,7 +58,9 @@ func handlePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fullID := fmt.Sprint("http://localhost:8080/", id)
+
 	w.Header().Add("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(id))
+	w.Write([]byte(fullID)) //id))
 }
