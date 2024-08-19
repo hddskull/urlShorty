@@ -34,8 +34,8 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println(url)
 
-	w.WriteHeader(http.StatusTemporaryRedirect)
 	w.Header().Add("Location", url)
+	w.WriteHeader(http.StatusTemporaryRedirect)
 
 	// w.Header().Add("Content-Type", "text/plain")
 	// w.WriteHeader(http.StatusTemporaryRedirect)
