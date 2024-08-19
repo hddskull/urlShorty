@@ -145,6 +145,7 @@ func TestFullRootHandler(t *testing.T) {
 		h(w, req)
 
 		result = w.Result()
+		defer result.Body.Close()
 
 		assert.Contains(t, result.Header.Get("Content-Type"), gc.want.contentType)
 		assert.Equal(t, gc.want.code, result.StatusCode)
