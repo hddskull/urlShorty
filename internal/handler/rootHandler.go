@@ -11,18 +11,16 @@ import (
 
 func RootHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-		handleGet(w, r)
+		RootGetHandler(w, r)
 	} else if r.Method == http.MethodPost {
-		handlePost(w, r)
+		RootPostHandler(w, r)
 	} else {
 		http.Error(w, "invalid method", http.StatusBadRequest)
 		return
 	}
 }
 
-func handleGet(w http.ResponseWriter, r *http.Request) {
-	// id := r.URL.Query().Get("id")
-
+func RootGetHandler(w http.ResponseWriter, r *http.Request) {
 	arr := strings.Split(r.URL.Path, "/")
 	id := arr[len(arr)-1]
 
@@ -37,12 +35,9 @@ func handleGet(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "text/plain")
 	w.Header().Add("Location", url)
 	w.WriteHeader(http.StatusTemporaryRedirect)
-
-	// w.WriteHeader(http.StatusTemporaryRedirect)
-	// http.Redirect(w, r, url, http.StatusTemporaryRedirect)
 }
 
-func handlePost(w http.ResponseWriter, r *http.Request) {
+func RootPostHandler(w http.ResponseWriter, r *http.Request) {
 	bodyB, err := io.ReadAll(r.Body)
 	defer r.Body.Close()
 
@@ -62,5 +57,5 @@ func handlePost(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Add("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
-	w.Write([]byte(fullID)) //id))
+	w.Write([]byte(fullID))
 }

@@ -64,7 +64,13 @@ func TestRootHandler(t *testing.T) {
 			req.Header.Set("Content-Type", "plain/text")
 
 			w := httptest.NewRecorder()
-			h := RootHandler
+			var h func(http.ResponseWriter, *http.Request)
+
+			if tt.method == http.MethodGet {
+				h = RootGetHandler
+			} else {
+				h = RootPostHandler
+			}
 
 			h(w, req)
 
@@ -116,9 +122,9 @@ func TestFullRootHandler(t *testing.T) {
 	}
 
 	t.Run("Post + Get yandex url", func(t *testing.T) {
-		h := RootHandler
-
 		//post request
+		h := RootPostHandler
+
 		req := httptest.NewRequest(pc.method, pc.url, strings.NewReader(pc.body))
 		req.Header.Set("Content-Type", "plain/text")
 
@@ -137,6 +143,7 @@ func TestFullRootHandler(t *testing.T) {
 		shortURL = string(bytes)
 
 		// get request
+		h = RootGetHandler
 
 		req = httptest.NewRequest(gc.method, shortURL, nil)
 		req.Header.Set("Content-Type", "plain/text")
