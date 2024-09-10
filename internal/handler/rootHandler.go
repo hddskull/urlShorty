@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/hddskull/urlShorty/config"
 	"github.com/hddskull/urlShorty/internal/storage"
 )
 
@@ -30,8 +31,6 @@ func RootGetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(url)
-
 	w.Header().Add("Content-Type", "text/plain")
 	w.Header().Add("Location", url)
 	w.WriteHeader(http.StatusTemporaryRedirect)
@@ -53,7 +52,7 @@ func RootPostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fullID := fmt.Sprint("http://localhost:8080/", id)
+	fullID := fmt.Sprint("http://", config.RedirectAdr.String(), "/", id)
 
 	w.Header().Add("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
