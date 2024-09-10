@@ -29,12 +29,12 @@ func (n *netAddress) String() string {
 
 func (n *netAddress) Set(flagValue string) error {
 
-	if strings.Contains(flagValue, "http://") {
-		flagValue = strings.Replace(flagValue, "http://", "", 1)
+	if i := strings.Index(flagValue, "https://"); i != -1 {
+		flagValue = flagValue[(len("https://") - 1):]
 	}
 
-	if strings.Contains(flagValue, "https://") {
-		flagValue = strings.Replace(flagValue, "https://", "", 1)
+	if i := strings.Index(flagValue, "http://"); i != -1 {
+		flagValue = flagValue[(len("http://") - 1):]
 	}
 
 	vals := strings.Split(flagValue, ":")
