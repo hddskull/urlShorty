@@ -31,8 +31,6 @@ func RootGetHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(url)
-
 	w.Header().Add("Content-Type", "text/plain")
 	w.Header().Add("Location", url)
 	w.WriteHeader(http.StatusTemporaryRedirect)
