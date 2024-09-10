@@ -30,11 +30,11 @@ func (n *netAddress) String() string {
 func (n *netAddress) Set(flagValue string) error {
 
 	if i := strings.Index(flagValue, "https://"); i != -1 {
-		flagValue = flagValue[(len("https://") - 1):]
+		flagValue = flagValue[(len("https://")):]
 	}
 
 	if i := strings.Index(flagValue, "http://"); i != -1 {
-		flagValue = flagValue[(len("http://") - 1):]
+		flagValue = flagValue[(len("http://")):]
 	}
 
 	vals := strings.Split(flagValue, ":")
