@@ -28,6 +28,15 @@ func (n *netAddress) String() string {
 }
 
 func (n *netAddress) Set(flagValue string) error {
+
+	if strings.Contains(flagValue, "http://") {
+		flagValue = strings.Replace(flagValue, "http://", "", 1)
+	}
+
+	if strings.Contains(flagValue, "https://") {
+		flagValue = strings.Replace(flagValue, "https://", "", 1)
+	}
+
 	vals := strings.Split(flagValue, ":")
 
 	if len(vals) != 2 {
@@ -35,6 +44,7 @@ func (n *netAddress) Set(flagValue string) error {
 	}
 
 	port, err := strconv.Atoi(vals[1])
+
 	if err != nil {
 		return err
 	}
