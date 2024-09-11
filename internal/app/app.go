@@ -9,7 +9,6 @@ import (
 )
 
 func Start() {
-	config.ConfigureNetAddress()
 
 	r := chi.NewRouter()
 
@@ -18,7 +17,7 @@ func Start() {
 		r.Get("/{id}", handler.RootGetHandler)
 	})
 
-	err := http.ListenAndServe(config.LaunchAdr.String(), r)
+	err := http.ListenAndServe(config.Address.ServerAddress, r)
 
 	if err != nil {
 		panic(err)

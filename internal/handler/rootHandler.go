@@ -52,7 +52,7 @@ func RootPostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fullID := fmt.Sprint("http://", config.RedirectAdr.String(), "/", id)
+	fullID := fmt.Sprint("http://", config.Address.BaseURL, "/", id)
 
 	w.Header().Add("Content-Type", "text/plain")
 	w.WriteHeader(http.StatusCreated)
