@@ -1,9 +1,14 @@
 package storage
 
 import (
-	"errors"
-	"fmt"
 	"math/rand"
+
+	"github.com/hddskull/urlShorty/tools/errors"
+)
+
+const (
+	charset   = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	keyLength = 6
 )
 
 type TemporaryStorage struct {
@@ -20,7 +25,7 @@ var TempStorage Storage = newTemporaryStorage()
 
 func (ts TemporaryStorage) Save(u string) (string, error) {
 	if u == "" {
-		return "", errors.New("empty url")
+		return "", errors.EmptyURL
 	}
 
 	id := generateShortKey()
@@ -31,22 +36,18 @@ func (ts TemporaryStorage) Save(u string) (string, error) {
 
 func (ts TemporaryStorage) Get(id string) (string, error) {
 	if id == "" {
-		return "", errors.New("empty url")
+		return "", errors.EmptyURL
 	}
 
 	url, ok := ts.urls[id]
 	if !ok {
-		return "", fmt.Errorf("no url by id: %s", id)
+		return "", errors.NoURLBy(id)
 	}
 
 	return url, nil
 }
 
 func generateShortKey() string {
-	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	const keyLength = 6
-
-	// rand.Seed(time.Now().UnixNano())
 	shortKey := make([]byte, keyLength)
 	for i := range shortKey {
 		shortKey[i] = charset[rand.Intn(len(charset))]

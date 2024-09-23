@@ -1,12 +1,14 @@
 package config
 
 import (
-	"errors"
+	//"errors"
 	"flag"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/hddskull/urlShorty/tools/errors"
 )
 
 type appConfig struct {
@@ -17,20 +19,20 @@ type appConfig struct {
 var Address = new(appConfig)
 
 func Setup() {
-	lEnv, rEnv := getEnv()
+	launchENV, redirectEnv := getEnv()
 	lFlag, rFlag := getFlags()
 
-	Address.ServerAddress, Address.BaseURL = lEnv, rEnv
+	Address.ServerAddress, Address.BaseURL = launchENV, redirectEnv
 
-	if lEnv == "" {
+	if launchENV == "" {
 		Address.ServerAddress = lFlag
 	}
 
-	if rEnv == "" {
+	if redirectEnv == "" {
 		Address.BaseURL = rFlag
 	}
 
-	fmt.Println("lEnv:  ", lEnv, "rEnv:  ", rEnv)
+	fmt.Println("launchENV:  ", launchENV, "redirectEnv:  ", redirectEnv)
 	fmt.Println("lFlag: ", lFlag, "rFlag: ", rFlag)
 	fmt.Println("Address.ServerAddress: ", Address.ServerAddress)
 	fmt.Println("Address.BaseURL: ", Address.BaseURL)
@@ -77,7 +79,7 @@ func getFlags() (string, string) {
 func validateAddress(adr string) (string, error) {
 
 	if adr == "" {
-		return "", errors.New("no server address")
+		return "", errors.NoServerAddress //errors.New("no server address")
 	}
 
 	if i := strings.Index(adr, "https://"); i != -1 {
@@ -91,7 +93,7 @@ func validateAddress(adr string) (string, error) {
 	vals := strings.Split(adr, ":")
 
 	if len(vals) != 2 {
-		return "", errors.New("invalid host:port")
+		return "", errors.InvalidAddressPattern
 	}
 
 	_, err := strconv.Atoi(vals[1])

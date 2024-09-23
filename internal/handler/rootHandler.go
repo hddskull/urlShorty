@@ -16,7 +16,7 @@ func RootHandler(w http.ResponseWriter, r *http.Request) {
 	} else if r.Method == http.MethodPost {
 		RootPostHandler(w, r)
 	} else {
-		http.Error(w, "invalid method", http.StatusBadRequest)
+		http.Error(w, "invalid method", http.StatusMethodNotAllowed)
 		return
 	}
 }
