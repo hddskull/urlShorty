@@ -3,7 +3,7 @@ package storage
 import (
 	"math/rand"
 
-	"github.com/hddskull/urlShorty/tools/errors"
+	"github.com/hddskull/urlShorty/tools/custom"
 )
 
 const (
@@ -25,7 +25,7 @@ var TempStorage Storage = newTemporaryStorage()
 
 func (ts TemporaryStorage) Save(u string) (string, error) {
 	if u == "" {
-		return "", errors.EmptyURL
+		return "", custom.ErrEmptyURL
 	}
 
 	id := generateShortKey()
@@ -36,12 +36,12 @@ func (ts TemporaryStorage) Save(u string) (string, error) {
 
 func (ts TemporaryStorage) Get(id string) (string, error) {
 	if id == "" {
-		return "", errors.EmptyURL
+		return "", custom.ErrEmptyURL
 	}
 
 	url, ok := ts.urls[id]
 	if !ok {
-		return "", errors.NoURLBy(id)
+		return "", custom.NoURLBy(id)
 	}
 
 	return url, nil

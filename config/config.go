@@ -1,14 +1,13 @@
 package config
 
 import (
-	//"errors"
 	"flag"
 	"fmt"
 	"os"
 	"strconv"
 	"strings"
 
-	"github.com/hddskull/urlShorty/tools/errors"
+	"github.com/hddskull/urlShorty/tools/custom"
 )
 
 type appConfig struct {
@@ -79,7 +78,7 @@ func getFlags() (string, string) {
 func validateAddress(adr string) (string, error) {
 
 	if adr == "" {
-		return "", errors.NoServerAddress //errors.New("no server address")
+		return "", custom.ErrNoServerAddress //custom.New("no server address")
 	}
 
 	if i := strings.Index(adr, "https://"); i != -1 {
@@ -93,7 +92,7 @@ func validateAddress(adr string) (string, error) {
 	vals := strings.Split(adr, ":")
 
 	if len(vals) != 2 {
-		return "", errors.InvalidAddressPattern
+		return "", custom.ErrInvalidAddressPattern
 	}
 
 	_, err := strconv.Atoi(vals[1])
