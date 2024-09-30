@@ -3,11 +3,12 @@ package shorten
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+
 	"github.com/hddskull/urlShorty/config"
 	"github.com/hddskull/urlShorty/internal/storage"
 	"github.com/hddskull/urlShorty/internal/utils"
 	"github.com/hddskull/urlShorty/tools/custom"
-	"net/http"
 )
 
 type (

@@ -2,11 +2,12 @@ package shorten
 
 import (
 	"encoding/json"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 const (
@@ -97,11 +98,7 @@ func TestPostHandler(t *testing.T) {
 			req.Header.Set("Content-Type", tc.contentType)
 
 			w := httptest.NewRecorder()
-			var h func(http.ResponseWriter, *http.Request)
-
-			h = PostHandler
-
-			h(w, req)
+			PostHandler(w, req)
 
 			result := w.Result()
 			defer result.Body.Close()
