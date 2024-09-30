@@ -1,4 +1,4 @@
-package handler
+package root
 
 import (
 	"fmt"
@@ -10,16 +10,16 @@ import (
 	"github.com/hddskull/urlShorty/internal/storage"
 )
 
-func RootHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method == http.MethodGet {
-		RootGetHandler(w, r)
-	} else if r.Method == http.MethodPost {
-		RootPostHandler(w, r)
-	} else {
-		http.Error(w, "invalid method", http.StatusMethodNotAllowed)
-		return
-	}
-}
+//func RootHandler(w http.ResponseWriter, r *http.Request) {
+//	if r.Method == http.MethodGet {
+//		RootGetHandler(w, r)
+//	} else if r.Method == http.MethodPost {
+//		RootPostHandler(w, r)
+//	} else {
+//		http.Error(w, "invalid method", http.StatusMethodNotAllowed)
+//		return
+//	}
+//}
 
 func RootGetHandler(w http.ResponseWriter, r *http.Request) {
 	arr := strings.Split(r.URL.Path, "/")
