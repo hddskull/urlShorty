@@ -25,7 +25,7 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 	reqModel := requestPostModel{}
 	if err := json.NewDecoder(r.Body).Decode(&reqModel); err != nil {
 		utils.SugaredLogger.Debugln("PostHandler decoding error:", err)
-		formattedError := custom.ErrorResponseModel{err.Error()}
+		formattedError := custom.ErrorResponseModel{Message: err.Error()}
 		custom.JSONError(w, formattedError, http.StatusBadRequest)
 		return
 	}
@@ -33,7 +33,7 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := storage.TempStorage.Save(reqModel.URL)
 	if err != nil {
 		utils.SugaredLogger.Debugln("PostHandler saving to storage error:", err)
-		formattedError := custom.ErrorResponseModel{err.Error()}
+		formattedError := custom.ErrorResponseModel{Message: err.Error()}
 		custom.JSONError(w, formattedError, http.StatusBadRequest)
 		return
 	}
@@ -49,7 +49,7 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 	err = json.NewEncoder(w).Encode(resModel)
 	if err != nil {
 		utils.SugaredLogger.Debugln("PostHandler encoding error:", err)
-		formattedError := custom.ErrorResponseModel{err.Error()}
+		formattedError := custom.ErrorResponseModel{Message: err.Error()}
 		custom.JSONError(w, formattedError, http.StatusBadRequest)
 		return
 	}
