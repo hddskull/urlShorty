@@ -1,9 +1,10 @@
 package middleware
 
 import (
-	"github.com/hddskull/urlShorty/internal/utils"
 	"net/http"
 	"time"
+
+	"github.com/hddskull/urlShorty/internal/utils"
 )
 
 type (
