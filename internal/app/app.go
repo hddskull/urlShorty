@@ -16,6 +16,7 @@ import (
 func Start() {
 
 	r := chi.NewRouter()
+	r.Use(middleware.AllowContentEncoding("gzip"))
 	r.Use(middleware.Compress(gzip.DefaultCompression, "application/json", "text/html"))
 	r.Use(customMiddleware.WithLogging)
 	//r.Use(customMiddleware.WithGzip)
