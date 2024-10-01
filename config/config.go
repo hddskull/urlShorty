@@ -2,12 +2,18 @@ package config
 
 import (
 	"flag"
-	"fmt"
 	"os"
 	"strconv"
 	"strings"
 
+	"github.com/hddskull/urlShorty/internal/utils"
 	"github.com/hddskull/urlShorty/tools/custom"
+)
+
+const (
+	serverAddressKey = "SERVER_ADDRESS"
+	baseURLKey       = "BASE_URL"
+	defaultAddress   = "localhost:8080"
 )
 
 type appConfig struct {
@@ -19,57 +25,51 @@ var Address = new(appConfig)
 
 func Setup() {
 	launchENV, redirectEnv := getEnv()
-	lFlag, rFlag := getFlags()
+	launchFlag, redirectFlag := getFlags()
 
 	Address.ServerAddress, Address.BaseURL = launchENV, redirectEnv
 
 	if launchENV == "" {
-		Address.ServerAddress = lFlag
+		Address.ServerAddress = launchFlag
 	}
 
 	if redirectEnv == "" {
-		Address.BaseURL = rFlag
+		Address.BaseURL = redirectFlag
 	}
 
-	fmt.Println("launchENV:  ", launchENV, "redirectEnv:  ", redirectEnv)
-	fmt.Println("lFlag: ", lFlag, "rFlag: ", rFlag)
-	fmt.Println("Address.ServerAddress: ", Address.ServerAddress)
-	fmt.Println("Address.BaseURL: ", Address.BaseURL)
+	utils.SugaredLogger.Infow("configuration setup finished", "launch address:", Address.ServerAddress, "redirect address:", Address.BaseURL)
 }
 
 func getEnv() (string, string) {
-	lEnv := os.Getenv("SERVER_ADDRESS")
-	rEnv := os.Getenv("BASE_URL")
+	lEnv := os.Getenv(serverAddressKey)
+	rEnv := os.Getenv(baseURLKey)
 
 	l, err := validateAddress(lEnv)
 	if err != nil {
-		fmt.Println(err)
+		utils.SugaredLogger.Debugln("environment variable", serverAddressKey, ":", err)
 	}
 
 	r, err := validateAddress(rEnv)
 	if err != nil {
-		fmt.Println(err)
+		utils.SugaredLogger.Debugln("environment variable", baseURLKey, ":", err)
 	}
 
 	return l, r
 }
 
 func getFlags() (string, string) {
-	//default
-	def := "localhost:8080"
-
-	lFlag := flag.String("a", def, "start server - host:port")
-	rFlag := flag.String("b", def, "redirect url - host:port")
+	lFlag := flag.String("a", defaultAddress, "start server - host:port")
+	rFlag := flag.String("b", defaultAddress, "redirect url - host:port")
 	flag.Parse()
 
 	l, err := validateAddress(*lFlag)
 	if err != nil {
-		fmt.Println(err)
+		utils.SugaredLogger.Debugln("launch flag error:", err)
 	}
 
 	r, err := validateAddress(*rFlag)
 	if err != nil {
-		fmt.Println(err)
+		utils.SugaredLogger.Debugln("redirect flag error:", err)
 	}
 
 	return l, r
@@ -78,7 +78,7 @@ func getFlags() (string, string) {
 func validateAddress(adr string) (string, error) {
 
 	if adr == "" {
-		return "", custom.ErrNoServerAddress //custom.New("no server address")
+		return "", custom.ErrNoServerAddress
 	}
 
 	if i := strings.Index(adr, "https://"); i != -1 {
@@ -103,14 +103,3 @@ func validateAddress(adr string) (string, error) {
 
 	return adr, nil
 }
-
-//
-//// Properties
-//var LaunchAdr = defaultNetAddress()
-//var RedirectAdr = defaultNetAddress()
-//
-//func ConfigureNetAddress() {
-//	flag.Var(LaunchAdr, "a", "Network address host:port")
-//	flag.Var(RedirectAdr, "b", "Network address host:port")
-//	flag.Parse()
-//}
