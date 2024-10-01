@@ -1,6 +1,7 @@
 package shorten
 
 import (
+	"compress/gzip"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -22,9 +23,21 @@ type (
 
 func PostHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Add("Content-Type", "application/json")
+	reader := r.Body
+
+	if r.Header.Get(`Content-Encoding`) == `gzip` {
+		gz, err := gzip.NewReader(r.Body)
+		if err != nil {
+			utils.SugaredLogger.Debugln("PostHandler gzip decompression error:", err)
+			formattedError := custom.ErrorResponseModel{Message: err.Error()}
+			custom.JSONError(w, formattedError, http.StatusInternalServerError)
+		}
+		reader = gz
+	}
+	defer reader.Close()
 
 	reqModel := requestPostModel{}
-	if err := json.NewDecoder(r.Body).Decode(&reqModel); err != nil {
+	if err := json.NewDecoder(reader).Decode(&reqModel); err != nil {
 		utils.SugaredLogger.Debugln("PostHandler decoding error:", err)
 		formattedError := custom.ErrorResponseModel{Message: err.Error()}
 		custom.JSONError(w, formattedError, http.StatusBadRequest)

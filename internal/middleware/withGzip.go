@@ -18,7 +18,7 @@ func (w gzipWriter) Write(b []byte) (int, error) {
 	return w.Writer.Write(b)
 }
 
-func WithGzip(next http.Handler) http.Handler {
+func CompressResponseGzip(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		isGzipEncoded := strings.Contains(r.Header.Get("Accept-Encoding"), "gzip")
 		isJSON := strings.Contains(r.Header.Get("Content-Type"), "application/json")
