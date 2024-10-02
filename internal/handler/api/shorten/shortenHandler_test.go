@@ -2,8 +2,11 @@ package shorten
 
 import (
 	"encoding/json"
+	"github.com/hddskull/urlShorty/config"
+	"github.com/hddskull/urlShorty/internal/storage"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
@@ -14,11 +17,29 @@ const (
 	localhost = "http://localhost:8080/"
 )
 
+var fileName = "test.json"
+var testStorage = storage.FileStorage{}
+
+func setupTest() error {
+	config.StorageFileName = fileName
+	//create file
+	_, err := os.Create(fileName)
+	return err
+}
+
+func cleanupTest() error {
+	err := os.Remove(fileName)
+	return err
+}
+
 // Post success
 // Post fail - empty model
 // Post fail - wrong model
 // Post fail - plain/text
 func TestPostHandler(t *testing.T) {
+	err := setupTest()
+	assert.NoError(t, err)
+
 	type want struct {
 		contentType string
 		code        int
@@ -107,4 +128,7 @@ func TestPostHandler(t *testing.T) {
 			assert.Equal(t, tc.want.code, result.StatusCode)
 		})
 	}
+
+	err = cleanupTest()
+	assert.NoError(t, err)
 }

@@ -4,10 +4,10 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"fmt"
+	"github.com/hddskull/urlShorty/internal/storage"
 	"net/http"
 
 	"github.com/hddskull/urlShorty/config"
-	"github.com/hddskull/urlShorty/internal/storage"
 	"github.com/hddskull/urlShorty/internal/utils"
 	"github.com/hddskull/urlShorty/tools/custom"
 )
@@ -44,7 +44,7 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := storage.TempStorage.Save(reqModel.URL)
+	id, err := storage.Current.Save(reqModel.URL)
 	if err != nil {
 		utils.SugaredLogger.Debugln("PostHandler saving to storage error:", err)
 		formattedError := custom.ErrorResponseModel{Message: err.Error()}

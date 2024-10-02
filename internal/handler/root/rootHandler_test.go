@@ -14,7 +14,7 @@ import (
 
 //test post with empty body
 //test post with normal url
-//test get with porper url
+//test get with proper url
 //test get with wrong url
 
 const (

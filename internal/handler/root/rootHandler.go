@@ -3,19 +3,19 @@ package root
 import (
 	"compress/gzip"
 	"fmt"
+	"github.com/hddskull/urlShorty/internal/storage"
 	"io"
 	"net/http"
 	"strings"
 
 	"github.com/hddskull/urlShorty/config"
-	"github.com/hddskull/urlShorty/internal/storage"
 )
 
 func GetHandler(w http.ResponseWriter, r *http.Request) {
 	arr := strings.Split(r.URL.Path, "/")
 	id := arr[len(arr)-1]
 
-	url, err := storage.TempStorage.Get(id)
+	url, err := storage.Current.Get(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -46,7 +46,7 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	bodyS := string(bodyB)
-	id, err := storage.TempStorage.Save(bodyS)
+	id, err := storage.Current.Save(bodyS)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

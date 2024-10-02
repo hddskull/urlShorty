@@ -11,9 +11,12 @@ import (
 )
 
 const (
-	serverAddressKey = "SERVER_ADDRESS"
-	baseURLKey       = "BASE_URL"
-	defaultAddress   = "localhost:8080"
+	serverAddressKey   = "SERVER_ADDRESS"
+	baseURLKey         = "BASE_URL"
+	fileStoragePathKey = "FILE_STORAGE_PATH"
+
+	defaultAddress         = "localhost:8080"
+	defaultFileStoragePath = "internal/storage/someStorage.json"
 )
 
 type appConfig struct {
@@ -21,7 +24,10 @@ type appConfig struct {
 	BaseURL       string
 }
 
-var Address = new(appConfig)
+var (
+	Address         = new(appConfig)
+	StorageFileName string
+)
 
 func Setup() {
 	launchENV, redirectEnv := getEnv()
@@ -37,7 +43,9 @@ func Setup() {
 		Address.BaseURL = redirectFlag
 	}
 
-	utils.SugaredLogger.Infow("configuration setup finished", "launch address:", Address.ServerAddress, "redirect address:", Address.BaseURL)
+	setFileStoragePath()
+
+	utils.SugaredLogger.Infow("configuration setup finished", "launch address:", Address.ServerAddress, "redirect address:", Address.BaseURL, "StorageFileName:", StorageFileName)
 }
 
 func getEnv() (string, string) {
@@ -102,4 +110,16 @@ func validateAddress(adr string) (string, error) {
 	}
 
 	return adr, nil
+}
+
+func setFileStoragePath() {
+	filePathEnv := os.Getenv(fileStoragePathKey)
+	StorageFileName = filePathEnv
+
+	if filePathEnv != "" {
+		return
+	}
+	filePathFlag := flag.String("f", defaultFileStoragePath, "/path/to/file.extension")
+	flag.Parse()
+	StorageFileName = *filePathFlag
 }
