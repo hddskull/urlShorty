@@ -25,63 +25,150 @@ type appConfig struct {
 }
 
 var (
-	Address         = new(appConfig)
+	Address         appConfig
 	StorageFileName string
 )
 
 func Setup() {
-	launchENV, redirectEnv := getEnv()
-	launchFlag, redirectFlag := getFlags()
-
-	Address.ServerAddress, Address.BaseURL = launchENV, redirectEnv
-
-	if launchENV == "" {
-		Address.ServerAddress = launchFlag
+	//set default values
+	config := appConfig{
+		ServerAddress: defaultAddress,
+		BaseURL:       defaultAddress,
 	}
+	StorageFileName = defaultFileStoragePath
+	//utils.SugaredLogger.Infof("default \n\t\tServerAddress: %v \n\t\tBaseURL: %v \n\t\tStorageFileName: %v\n\n", config.ServerAddress, config.BaseURL, StorageFileName)
 
-	if redirectEnv == "" {
-		Address.BaseURL = redirectFlag
-	}
+	getConfigFromFlags(&config)
+	//utils.SugaredLogger.Infof("after flags \n\t\tServerAddress: %v \n\t\tBaseURL: %v \n\t\tStorageFileName: %v\n\n", config.ServerAddress, config.BaseURL, StorageFileName)
 
-	setFileStoragePath()
+	getConfigFromEnv(&config)
+	//utils.SugaredLogger.Infof("after enc \n\t\tServerAddress: %v \n\t\tBaseURL: %v \n\t\tStorageFileName: %v\n\n", config.ServerAddress, config.BaseURL, StorageFileName)
 
-	utils.SugaredLogger.Infow("configuration setup finished", "launch address:", Address.ServerAddress, "redirect address:", Address.BaseURL, "StorageFileName:", StorageFileName)
+	Address = config
+
+	utils.SugaredLogger.Infoln("configuration setup finished")
+	utils.SugaredLogger.Debugln("launch address:  ", Address.ServerAddress)
+	utils.SugaredLogger.Debugln("redirect address:", Address.BaseURL)
+	utils.SugaredLogger.Debugln("StorageFileName: ", StorageFileName)
+
+	//launchENV, redirectEnv := getEnv()
+	//launchFlag, redirectFlag := getFlags()
+	//
+	//Address.ServerAddress, Address.BaseURL = launchENV, redirectEnv
+	//
+	//if launchENV == "" {
+	//	Address.ServerAddress = launchFlag
+	//}
+	//
+	//if redirectEnv == "" {
+	//	Address.BaseURL = redirectFlag
+	//}
+	//
+	//setFileStoragePath()
+
 }
 
-func getEnv() (string, string) {
-	lEnv := os.Getenv(serverAddressKey)
-	rEnv := os.Getenv(baseURLKey)
+// getConfigFromFlags will parse flags ["a", "b", "f"]
+func getConfigFromFlags(config *appConfig) {
+	//flag "a" - server launch address
+	flag.Func("a", "start server - host:port", func(s string) error {
+		formattedAddr, err := validateAddress(s)
+		if err != nil {
+			utils.SugaredLogger.Debugf("flag %s error: %s", "a", err)
+			return err
+		}
+		config.ServerAddress = formattedAddr
+		return nil
+	})
 
-	l, err := validateAddress(lEnv)
-	if err != nil {
-		utils.SugaredLogger.Debugln("environment variable", serverAddressKey, ":", err)
-	}
+	//flag "b" - redirect address
+	flag.Func("b", "redirect url - host:port", func(s string) error {
+		formattedAddr, err := validateAddress(s)
+		if err != nil {
+			utils.SugaredLogger.Debugf("flag %s error: %s", "b", err)
+			return err
+		}
+		config.BaseURL = formattedAddr
+		return nil
+	})
 
-	r, err := validateAddress(rEnv)
-	if err != nil {
-		utils.SugaredLogger.Debugln("environment variable", baseURLKey, ":", err)
-	}
+	//flag "f" - file storage path
+	flag.Func("f", "/path/to/file.extension", func(s string) error {
+		if s == "" {
+			err := custom.ErrEmptyPath
+			utils.SugaredLogger.Debugf("flag %s error: %s", "b", err)
+			return err
+		}
+		StorageFileName = s
+		return nil
+	})
 
-	return l, r
-}
-
-func getFlags() (string, string) {
-	lFlag := flag.String("a", defaultAddress, "start server - host:port")
-	rFlag := flag.String("b", defaultAddress, "redirect url - host:port")
 	flag.Parse()
 
-	l, err := validateAddress(*lFlag)
-	if err != nil {
-		utils.SugaredLogger.Debugln("launch flag error:", err)
-	}
-
-	r, err := validateAddress(*rFlag)
-	if err != nil {
-		utils.SugaredLogger.Debugln("redirect flag error:", err)
-	}
-
-	return l, r
 }
+
+// getConfigFromEnv will parse environment values, if values aren't empty will overwrite default values
+func getConfigFromEnv(config *appConfig) {
+	//server launch
+	launchEnv, err := validateAddress(os.Getenv(serverAddressKey))
+	if err != nil {
+		utils.SugaredLogger.Debugf("environment value %s err: %s", launchEnv, err)
+	}
+	if launchEnv != "" {
+		config.ServerAddress = launchEnv
+	}
+
+	//redirect url
+	redirectEnv, err := validateAddress(os.Getenv(baseURLKey))
+	if err != nil {
+		utils.SugaredLogger.Debugf("environment value %s err: %s", redirectEnv, err)
+	}
+	if redirectEnv != "" {
+		config.BaseURL = redirectEnv
+	}
+
+	storagePathEnv := os.Getenv(fileStoragePathKey)
+	if redirectEnv != "" {
+		StorageFileName = storagePathEnv
+	} else {
+		utils.SugaredLogger.Debugf("environment value %s err: %s", storagePathEnv, err)
+	}
+}
+
+//func getEnv() (string, string) {
+//	lEnv := os.Getenv(serverAddressKey)
+//	rEnv := os.Getenv(baseURLKey)
+//
+//	l, err := validateAddress(lEnv)
+//	if err != nil {
+//		utils.SugaredLogger.Debugln("environment variable", serverAddressKey, ":", err)
+//	}
+//
+//	r, err := validateAddress(rEnv)
+//	if err != nil {
+//		utils.SugaredLogger.Debugln("environment variable", baseURLKey, ":", err)
+//	}
+//
+//	return l, r
+//}
+
+//func getFlags() (string, string) {
+//	lFlag := flag.String("a", defaultAddress, "start server - host:port")
+//	rFlag := flag.String("b", defaultAddress, "redirect url - host:port")
+//	flag.Parse()
+//
+//	l, err := validateAddress(*lFlag)
+//	if err != nil {
+//		utils.SugaredLogger.Debugln("launch flag error:", err)
+//	}
+//
+//	r, err := validateAddress(*rFlag)
+//	if err != nil {
+//		utils.SugaredLogger.Debugln("redirect flag error:", err)
+//	}
+//
+//	return l, r
+//}
 
 func validateAddress(adr string) (string, error) {
 
@@ -112,14 +199,14 @@ func validateAddress(adr string) (string, error) {
 	return adr, nil
 }
 
-func setFileStoragePath() {
-	filePathEnv := os.Getenv(fileStoragePathKey)
-	StorageFileName = filePathEnv
-
-	if filePathEnv != "" {
-		return
-	}
-	filePathFlag := flag.String("f", defaultFileStoragePath, "/path/to/file.extension")
-	flag.Parse()
-	StorageFileName = *filePathFlag
-}
+//func setFileStoragePath() {
+//	filePathEnv := os.Getenv(fileStoragePathKey)
+//	StorageFileName = filePathEnv
+//
+//	if filePathEnv != "" {
+//		return
+//	}
+//	filePathFlag := flag.String("f", defaultFileStoragePath, "/path/to/file.extension")
+//	flag.Parse()
+//	StorageFileName = *filePathFlag
+//}
