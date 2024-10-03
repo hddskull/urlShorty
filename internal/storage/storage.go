@@ -37,7 +37,6 @@ func SetupStorage() {
 
 		return
 	}
-	if err != nil {
-		panic(err)
-	}
+
+	panic(err)
 }
