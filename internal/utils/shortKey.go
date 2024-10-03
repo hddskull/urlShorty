@@ -1,8 +1,8 @@
 package utils
 
 import (
+	"github.com/google/uuid"
 	"math/rand"
-	"os/exec"
 )
 
 const (
@@ -21,11 +21,12 @@ func GenerateShortKey() string {
 }
 
 func GenerateUUID() (string, error) {
-	newUUID, err := exec.Command(UUIDCommand).Output()
-	if err != nil {
-		return "", err
-	}
-	strUUID := string(newUUID)
-	strUUID = strUUID[:len(strUUID)-1]
-	return strUUID, nil
+	newUUID := uuid.New().String()
+	//newUUID, err := exec.Command(UUIDCommand).Output()
+	//if err != nil {
+	//	return "", err
+	//}
+	//strUUID := string(newUUID)
+	//strUUID = strUUID[:len(strUUID)-1]
+	return newUUID, nil
 }
