@@ -13,7 +13,7 @@ const (
 )
 
 func TestTemporaryStorage(t *testing.T) {
-	storage := newTemporaryStorage()
+	storage := NewTemporaryStorage()
 
 	//test for errors
 	tests := []struct {

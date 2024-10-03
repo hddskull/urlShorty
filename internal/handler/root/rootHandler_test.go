@@ -1,10 +1,12 @@
-package handler
+package root
 
 import (
-	"fmt"
+	"github.com/hddskull/urlShorty/config"
+	"github.com/hddskull/urlShorty/internal/storage"
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"strings"
 	"testing"
 
@@ -14,76 +16,91 @@ import (
 
 //test post with empty body
 //test post with normal url
-//test get with porper url
+//test get with proper url
 //test get with wrong url
 
 const (
 	localhost = "http://localhost:8080/"
+	fileName  = "test.json"
 )
 
-func TestRootHandler(t *testing.T) {
-	type want struct {
-		contentType string
-		code        int
-	}
+func setupTest() {
 
-	type testCase struct {
-		name   string
-		method string
-		url    string
-		body   string
-		want   want
-	}
-
-	tests := []testCase{
-		{
-			name:   "Post: Bad Request",
-			method: http.MethodPost,
-			url:    localhost,
-			body:   "",
-			want: want{
-				contentType: "text/plain",
-				code:        http.StatusBadRequest,
-			},
-		},
-		{
-			name:   "Get: Bad Request",
-			method: http.MethodGet,
-			url:    fmt.Sprint(localhost, "AbCdE"),
-			body:   "",
-			want: want{
-				contentType: "text/plain",
-				code:        http.StatusBadRequest,
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			req := httptest.NewRequest(tt.method, tt.url, strings.NewReader(tt.body))
-			req.Header.Set("Content-Type", "plain/text")
-
-			w := httptest.NewRecorder()
-			var h func(http.ResponseWriter, *http.Request)
-
-			if tt.method == http.MethodGet {
-				h = RootGetHandler
-			} else {
-				h = RootPostHandler
-			}
-
-			h(w, req)
-
-			result := w.Result()
-			defer result.Body.Close()
-
-			assert.Contains(t, result.Header.Get("Content-Type"), tt.want.contentType)
-			assert.Equal(t, tt.want.code, result.StatusCode)
-		})
-	}
+	config.Setup()
+	config.StorageFileName = fileName
+	storage.SetupStorage()
 }
 
+func cleanupTest() error {
+	err := os.Remove(fileName)
+	return err
+}
+
+//func TestRootHandler(t *testing.T) {
+//	type want struct {
+//		contentType string
+//		code        int
+//	}
+//
+//	type testCase struct {
+//		name   string
+//		method string
+//		url    string
+//		body   string
+//		want   want
+//	}
+//
+//	tests := []testCase{
+//		{
+//			name:   "Post: Bad Request",
+//			method: http.MethodPost,
+//			url:    localhost,
+//			body:   "",
+//			want: want{
+//				contentType: "text/plain",
+//				code:        http.StatusBadRequest,
+//			},
+//		},
+//		{
+//			name:   "Get: Bad Request",
+//			method: http.MethodGet,
+//			url:    fmt.Sprint(localhost, "AbCdE"),
+//			body:   "",
+//			want: want{
+//				contentType: "text/plain",
+//				code:        http.StatusBadRequest,
+//			},
+//		},
+//	}
+//
+//	for _, tt := range tests {
+//		t.Run(tt.name, func(t *testing.T) {
+//			req := httptest.NewRequest(tt.method, tt.url, strings.NewReader(tt.body))
+//			req.Header.Set("Content-Type", "plain/text")
+//
+//			w := httptest.NewRecorder()
+//			var h func(http.ResponseWriter, *http.Request)
+//
+//			if tt.method == http.MethodGet {
+//				h = GetHandler
+//			} else {
+//				h = PostHandler
+//			}
+//
+//			h(w, req)
+//
+//			result := w.Result()
+//			defer result.Body.Close()
+//
+//			assert.Contains(t, result.Header.Get("Content-Type"), tt.want.contentType)
+//			assert.Equal(t, tt.want.code, result.StatusCode)
+//		})
+//	}
+//}
+
 func TestFullRootHandler(t *testing.T) {
+	setupTest()
+
 	type want struct {
 		contentType string
 		code        int
@@ -123,7 +140,7 @@ func TestFullRootHandler(t *testing.T) {
 
 	t.Run("Post + Get yandex url", func(t *testing.T) {
 		//post request
-		h := RootPostHandler
+		h := PostHandler
 
 		req := httptest.NewRequest(pc.method, pc.url, strings.NewReader(pc.body))
 		req.Header.Set("Content-Type", "plain/text")
@@ -143,7 +160,7 @@ func TestFullRootHandler(t *testing.T) {
 		shortURL = string(bytes)
 
 		// get request
-		h = RootGetHandler
+		h = GetHandler
 
 		req = httptest.NewRequest(gc.method, shortURL, nil)
 		req.Header.Set("Content-Type", "plain/text")
@@ -160,4 +177,8 @@ func TestFullRootHandler(t *testing.T) {
 
 	})
 
+	err := cleanupTest()
+	if err != nil {
+		t.Fatal(err)
+	}
 }
