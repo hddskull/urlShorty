@@ -15,16 +15,13 @@ import (
 
 const (
 	localhost = "http://localhost:8080/"
+	fileName  = "test.json"
 )
 
-var fileName = "test.json"
-var testStorage = storage.FileStorage{}
-
-func setupTest() error {
+func setupTest() {
+	config.Setup()
 	config.StorageFileName = fileName
-	//create file
-	_, err := os.Create(fileName)
-	return err
+	storage.SetupStorage()
 }
 
 func cleanupTest() error {
@@ -37,8 +34,7 @@ func cleanupTest() error {
 // Post fail - wrong model
 // Post fail - plain/text
 func TestPostHandler(t *testing.T) {
-	err := setupTest()
-	assert.NoError(t, err)
+	setupTest()
 
 	type want struct {
 		contentType string
@@ -129,6 +125,6 @@ func TestPostHandler(t *testing.T) {
 		})
 	}
 
-	err = cleanupTest()
+	err := cleanupTest()
 	assert.NoError(t, err)
 }
