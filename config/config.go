@@ -16,7 +16,7 @@ const (
 	fileStoragePathKey = "FILE_STORAGE_PATH"
 
 	defaultAddress         = "localhost:8080"
-	defaultFileStoragePath = "internal/storage/someStorage.json"
+	DefaultFileStoragePath = "internal/storage/someStorage.json"
 )
 
 type appConfig struct {
@@ -35,7 +35,7 @@ func Setup() {
 		ServerAddress: defaultAddress,
 		BaseURL:       defaultAddress,
 	}
-	StorageFileName = defaultFileStoragePath
+	StorageFileName = DefaultFileStoragePath
 	//utils.SugaredLogger.Infof("default \n\t\tServerAddress: %v \n\t\tBaseURL: %v \n\t\tStorageFileName: %v\n\n", config.ServerAddress, config.BaseURL, StorageFileName)
 
 	getConfigFromFlags(&config)
@@ -206,7 +206,7 @@ func validateAddress(adr string) (string, error) {
 //	if filePathEnv != "" {
 //		return
 //	}
-//	filePathFlag := flag.String("f", defaultFileStoragePath, "/path/to/file.extension")
+//	filePathFlag := flag.String("f", DefaultFileStoragePath, "/path/to/file.extension")
 //	flag.Parse()
 //	StorageFileName = *filePathFlag
 //}

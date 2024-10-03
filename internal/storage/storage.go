@@ -16,6 +16,9 @@ var Current Storage = newFileStorage()
 // SetupStorage call in main to init var Current and create storage file
 func SetupStorage() {
 	//create storage file
+	if config.StorageFileName == "" {
+		config.StorageFileName = config.DefaultFileStoragePath
+	}
 
 	_, err := os.OpenFile(config.StorageFileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	//if file opened - return
