@@ -112,7 +112,7 @@ func getConfigFromEnv(config *appConfig) {
 	//server launch
 	launchEnv, err := validateAddress(os.Getenv(serverAddressKey))
 	if err != nil {
-		utils.SugaredLogger.Debugf("environment value %s err: %s", launchEnv, err)
+		utils.SugaredLogger.Debugf("env %s err: %s", baseURLKey, err)
 	}
 	if launchEnv != "" {
 		config.ServerAddress = launchEnv
@@ -121,17 +121,18 @@ func getConfigFromEnv(config *appConfig) {
 	//redirect url
 	redirectEnv, err := validateAddress(os.Getenv(baseURLKey))
 	if err != nil {
-		utils.SugaredLogger.Debugf("environment value %s err: %s", redirectEnv, err)
+		utils.SugaredLogger.Debugf("env %s err: %s", baseURLKey, err)
 	}
 	if redirectEnv != "" {
 		config.BaseURL = redirectEnv
 	}
 
 	storagePathEnv := os.Getenv(fileStoragePathKey)
-	if redirectEnv != "" {
+
+	if storagePathEnv != "" {
 		StorageFileName = storagePathEnv
 	} else {
-		utils.SugaredLogger.Debugf("environment value %s err: %s", storagePathEnv, err)
+		utils.SugaredLogger.Debugf("env %s err: %s", fileStoragePathKey, err)
 	}
 }
 
