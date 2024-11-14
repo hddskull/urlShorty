@@ -3,6 +3,7 @@ package root
 import (
 	"compress/gzip"
 	"fmt"
+	"github.com/hddskull/urlShorty/internal/database"
 	"github.com/hddskull/urlShorty/internal/storage"
 	"io"
 	"net/http"
@@ -60,5 +61,12 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func PingHandler(w http.ResponseWriter, r *http.Request) {
+	err := database.Current.Ping()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
+	w.Header().Add("Content-Type", "text/plain")
+	w.WriteHeader(http.StatusOK)
 }

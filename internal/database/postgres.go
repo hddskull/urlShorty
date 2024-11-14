@@ -2,10 +2,11 @@ package database
 
 import (
 	"database/sql"
+	"github.com/hddskull/urlShorty/internal/utils"
+	"github.com/hddskull/urlShorty/tools/custom"
 )
 
 type Postgres struct {
-	DB *sql.DB
 }
 
 func NewPostgres() *Postgres {
@@ -15,26 +16,30 @@ func NewPostgres() *Postgres {
 var _ Database = NewPostgres()
 
 // ConnectDB uses creds (credentials) to establish a connection: host, user, password, db name, etc.
-func (p Postgres) ConnectDB(creds string) error {
+func (p Postgres) ConnectDB(creds string) (*sql.DB, error) {
 
 	db, err := sql.Open("postgres", creds)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = db.Ping()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	p.DB = db
 
-	return nil
+	return db, nil
 }
 
 func (p Postgres) Ping() error {
-	return p.DB.Ping()
+	err := dbConnection.Ping()
+	if err != nil {
+		err = custom.ErrDBPing
+	}
+	utils.SugaredLogger.Debugln("Ping():", err)
+	return err
 }
 
 func (p Postgres) CloseDB() error {
-	return p.DB.Close()
+	return dbConnection.Close()
 }

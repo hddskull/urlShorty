@@ -17,6 +17,8 @@ var ErrInvalidAddressPattern = errors.New("invalid host:port")
 var ErrEmptyURL = errors.New("empty url")
 var ErrEmptyPath = errors.New("empty path")
 
+var ErrDBPing = errors.New("DB ping failed")
+
 func NoURLBy(id string) error {
 	return fmt.Errorf("no url by id: %s", id)
 }

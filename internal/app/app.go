@@ -22,10 +22,11 @@ const (
 func Start() {
 
 	creds := config.DBCredentials
-	err := database.Current.ConnectDB(creds)
+	db, err := database.Current.ConnectDB(creds)
 	if err != nil {
 		panic(err)
 	}
+	database.SaveConnection(db)
 	defer database.Current.CloseDB()
 
 	r := chi.NewRouter()
