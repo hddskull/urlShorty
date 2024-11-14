@@ -11,19 +11,16 @@ import (
 )
 
 const (
+	//Environment property keys
 	serverAddressKey   = "SERVER_ADDRESS"
 	baseURLKey         = "BASE_URL"
 	fileStoragePathKey = "FILE_STORAGE_PATH"
+	dbCredentialsKey   = "DATABASE_DSN"
 
+	//defaults
 	defaultAddress         = "localhost:8080"
 	DefaultFileStoragePath = "internal/storage/someStorage.json"
 	defaultDBCredentials   = "host=localhost port=5432 user=postgres password=password dbname=urlshorty sslmode=disable"
-
-	host     = "localhost"
-	port     = 5432
-	user     = "postgres"
-	password = "password"
-	dbname   = "urlshorty"
 )
 
 type appConfig struct {
@@ -46,10 +43,8 @@ func Setup() {
 	StorageFileName = DefaultFileStoragePath
 	DBCredentials = defaultDBCredentials
 
-	//TODO get DBCredentials from flag
 	getConfigFromFlags(&config)
 
-	//TODO get DBCredentials from environment
 	getConfigFromEnv(&config)
 
 	Address = config
@@ -58,6 +53,7 @@ func Setup() {
 	utils.SugaredLogger.Debugln("launch address:  ", Address.ServerAddress)
 	utils.SugaredLogger.Debugln("redirect address:", Address.BaseURL)
 	utils.SugaredLogger.Debugln("StorageFileName: ", StorageFileName)
+	utils.SugaredLogger.Debugln("DBCredentials: ", DBCredentials)
 }
 
 // getConfigFromFlags will parse flags ["a", "b", "f"]
@@ -95,8 +91,18 @@ func getConfigFromFlags(config *appConfig) {
 		return nil
 	})
 
-	flag.Parse()
+	//flag "d" - credentials for db connect
+	flag.Func("d", "credentials for db connect", func(s string) error {
+		if s == "" {
+			err := custom.ErrEmptyPath
+			utils.SugaredLogger.Debugf("flag %s error: %s", "d", err)
+			return err
+		}
+		DBCredentials = s
+		return nil
+	})
 
+	flag.Parse()
 }
 
 // getConfigFromEnv will parse environment values, if values aren't empty will overwrite default values
@@ -119,12 +125,20 @@ func getConfigFromEnv(config *appConfig) {
 		config.BaseURL = redirectEnv
 	}
 
+	//storage path
 	storagePathEnv := os.Getenv(fileStoragePathKey)
-
-	if storagePathEnv != "" {
-		StorageFileName = storagePathEnv
+	if storagePathEnv == "" {
+		utils.SugaredLogger.Debugf("env %s err: %s", fileStoragePathKey, custom.ErrEmptyEnvVar)
 	} else {
-		utils.SugaredLogger.Debugf("env %s err: %s", fileStoragePathKey, err)
+		StorageFileName = storagePathEnv
+	}
+
+	//database credentials
+	dbCredentialsEnv := os.Getenv(dbCredentialsKey)
+	if dbCredentialsEnv == "" {
+		utils.SugaredLogger.Debugf("env %s err: %s", fileStoragePathKey, custom.ErrEmptyEnvVar)
+	} else {
+		StorageFileName = dbCredentialsEnv
 	}
 }
 

@@ -16,6 +16,7 @@ var ErrInvalidAddressPattern = errors.New("invalid host:port")
 
 var ErrEmptyURL = errors.New("empty url")
 var ErrEmptyPath = errors.New("empty path")
+var ErrEmptyEnvVar = errors.New("empty environment variable")
 
 var ErrDBPing = errors.New("DB ping failed")
 
