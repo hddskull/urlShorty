@@ -17,6 +17,13 @@ const (
 
 	defaultAddress         = "localhost:8080"
 	DefaultFileStoragePath = "internal/storage/someStorage.json"
+	defaultDBCredentials   = "host=localhost port=5432 user=postgres password=password dbname=urlshorty sslmode=disable"
+
+	host     = "localhost"
+	port     = 5432
+	user     = "postgres"
+	password = "password"
+	dbname   = "urlshorty"
 )
 
 type appConfig struct {
@@ -27,6 +34,7 @@ type appConfig struct {
 var (
 	Address         appConfig
 	StorageFileName string
+	DBCredentials   string
 )
 
 func Setup() {
@@ -36,9 +44,12 @@ func Setup() {
 		BaseURL:       defaultAddress,
 	}
 	StorageFileName = DefaultFileStoragePath
+	DBCredentials = defaultDBCredentials
 
+	//TODO get DBCredentials from flag
 	getConfigFromFlags(&config)
 
+	//TODO get DBCredentials from environment
 	getConfigFromEnv(&config)
 
 	Address = config

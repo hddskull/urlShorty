@@ -58,3 +58,7 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte(fullID))
 }
+
+func PingHandler(w http.ResponseWriter, r *http.Request) {
+
+}
