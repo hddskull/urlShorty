@@ -18,7 +18,7 @@ var ErrEmptyURL = errors.New("empty url")
 var ErrEmptyPath = errors.New("empty path")
 var ErrEmptyEnvVar = errors.New("empty environment variable")
 
-var ErrDBPing = errors.New("DB ping failed")
+//var ErrDBPing = errors.New("DB ping failed")
 
 func NoURLBy(id string) error {
 	return fmt.Errorf("no url by id: %s", id)

@@ -3,7 +3,6 @@ package database
 import (
 	"database/sql"
 	"github.com/hddskull/urlShorty/internal/utils"
-	"github.com/hddskull/urlShorty/tools/custom"
 )
 
 type Postgres struct {
@@ -34,9 +33,8 @@ func (p Postgres) ConnectDB(creds string) (*sql.DB, error) {
 func (p Postgres) Ping() error {
 	err := dbConnection.Ping()
 	if err != nil {
-		err = custom.ErrDBPing
+		utils.SugaredLogger.Debugln("Ping():", err)
 	}
-	utils.SugaredLogger.Debugln("Ping():", err)
 	return err
 }
 
