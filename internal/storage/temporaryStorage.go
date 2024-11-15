@@ -9,13 +9,17 @@ type TemporaryStorage struct {
 	urls map[string]string
 }
 
-// interface compliance check
-var _ Storage = NewTemporaryStorage()
-
 func NewTemporaryStorage() *TemporaryStorage {
 	return &TemporaryStorage{
 		urls: make(map[string]string),
 	}
+}
+
+// Storage interface
+var _ Storage = NewTemporaryStorage()
+
+func (ts TemporaryStorage) Setup() error {
+	return nil
 }
 
 func (ts TemporaryStorage) Save(u string) (string, error) {
@@ -40,4 +44,12 @@ func (ts TemporaryStorage) Get(id string) (string, error) {
 	}
 
 	return url, nil
+}
+
+func (ts TemporaryStorage) Ping() error {
+	return custom.ErrFuncUnsupported
+}
+
+func (ts TemporaryStorage) Close() error {
+	return custom.ErrFuncUnsupported
 }

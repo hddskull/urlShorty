@@ -2,44 +2,43 @@ package storage
 
 import (
 	"github.com/hddskull/urlShorty/config"
-	"os"
-	"path/filepath"
+	"github.com/hddskull/urlShorty/internal/utils"
 )
 
 type Storage interface {
+	Setup() error
 	Save(u string) (string, error)
 	Get(id string) (string, error)
+	Ping() error
+	Close() error
 }
 
-var Current Storage = newFileStorage()
+var Current Storage
 
 // SetupStorage call in main to init var Current and create storage file
 func SetupStorage() {
-	//create storage file
-	if config.StorageFileName == "" {
-		config.StorageFileName = config.DefaultFileStoragePath
-	}
 
-	_, err := os.OpenFile(config.StorageFileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	//if file opened - return
-	if err == nil {
-		return
-	}
-	//else try to create dir
-	if os.IsNotExist(err) {
-		dir := filepath.Dir(config.StorageFileName)
-		err = os.MkdirAll(dir, 0777)
+	if config.DBCredentials != "" {
+		Current = newPostgresStorage()
+		err := Current.Setup()
 		if err != nil {
 			panic(err)
 		}
-
-		_, err = os.OpenFile(config.StorageFileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		utils.SugaredLogger.Debugln("Current Storage type: postgres")
+	} else if config.StorageFileName != "" {
+		Current = newFileStorage()
+		err := Current.Setup()
 		if err != nil {
 			panic(err)
 		}
-
-		return
+		utils.SugaredLogger.Debugln("Current Storage type: file")
+	} else {
+		Current = NewTemporaryStorage()
+		err := Current.Setup()
+		if err != nil {
+			panic(err)
+		}
+		utils.SugaredLogger.Debugln("Current Storage type: RAM memory")
 	}
 
-	panic(err)
 }

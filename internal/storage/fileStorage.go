@@ -6,6 +6,7 @@ import (
 	"github.com/hddskull/urlShorty/internal/utils"
 	"github.com/hddskull/urlShorty/tools/custom"
 	"os"
+	"path/filepath"
 )
 
 type fileStorageModel struct {
@@ -38,7 +39,33 @@ func newFileStorage() *FileStorage {
 	return &FileStorage{}
 }
 
+// Storage interface
 var _ Storage = newFileStorage()
+
+func (fs FileStorage) Setup() error {
+	_, err := os.OpenFile(config.StorageFileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	//if file opened - return
+	if err == nil {
+		return nil
+	}
+	//else try to create dir
+	if os.IsNotExist(err) {
+		dir := filepath.Dir(config.StorageFileName)
+		err = os.MkdirAll(dir, 0777)
+		if err != nil {
+			return err
+		}
+
+		_, err = os.OpenFile(config.StorageFileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	return err
+}
 
 func (fs FileStorage) Save(u string) (string, error) {
 	if u == "" {
@@ -86,6 +113,15 @@ func (fs FileStorage) Get(id string) (string, error) {
 	return originalURL, nil
 }
 
+func (fs FileStorage) Ping() error {
+	return custom.ErrFuncUnsupported
+}
+
+func (fs FileStorage) Close() error {
+	return custom.ErrFuncUnsupported
+}
+
+// Supporting methods
 func (fs FileStorage) readAllFromFile() ([]fileStorageModel, error) {
 	filename := config.StorageFileName
 

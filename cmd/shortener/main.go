@@ -9,6 +9,5 @@ import (
 func main() {
 	config.Setup()
 	storage.SetupStorage()
-	//database.Start()
 	app.Start()
 }
