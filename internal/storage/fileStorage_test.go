@@ -3,6 +3,7 @@ package storage
 import (
 	"encoding/json"
 	"github.com/hddskull/urlShorty/config"
+	"github.com/hddskull/urlShorty/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -20,7 +21,7 @@ func setupTest() error {
 		return err
 	}
 	//create file data
-	m := []StorageModel{
+	m := []model.StorageModel{
 		{
 			UUID:        "test",
 			ShortURL:    "t.ru",
