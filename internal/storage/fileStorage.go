@@ -3,34 +3,12 @@ package storage
 import (
 	"encoding/json"
 	"github.com/hddskull/urlShorty/config"
+	"github.com/hddskull/urlShorty/internal/model"
 	"github.com/hddskull/urlShorty/internal/utils"
 	"github.com/hddskull/urlShorty/tools/custom"
 	"os"
 	"path/filepath"
 )
-
-type fileStorageModel struct {
-	UUID        string `json:"uuid"`
-	ShortURL    string `json:"short_url"`
-	OriginalURL string `json:"original_url"`
-}
-
-func newFileStorageModel(originalURL string) (*fileStorageModel, error) {
-	//create uuid
-	uuidBytes, err := utils.GenerateUUID()
-	if err != nil {
-		return nil, err
-	}
-
-	//create shortURL
-	shortURL := utils.GenerateShortKey()
-
-	return &fileStorageModel{
-		UUID:        string(uuidBytes),
-		ShortURL:    shortURL,
-		OriginalURL: originalURL,
-	}, nil
-}
 
 type FileStorage struct {
 }
@@ -86,7 +64,7 @@ func (fs FileStorage) Save(u string) (string, error) {
 		return existingModel.ShortURL, nil
 	}
 
-	model, err := newFileStorageModel(u)
+	model, err := model.NewFileStorageModel(u)
 	if err != nil {
 		return "", err
 	}
@@ -122,7 +100,8 @@ func (fs FileStorage) Close() error {
 }
 
 // Supporting methods
-func (fs FileStorage) readAllFromFile() ([]fileStorageModel, error) {
+
+func (fs FileStorage) readAllFromFile() ([]model.StorageModel, error) {
 	filename := config.StorageFileName
 
 	fileBytes, err := os.ReadFile(filename)
@@ -136,7 +115,7 @@ func (fs FileStorage) readAllFromFile() ([]fileStorageModel, error) {
 		return nil, nil
 	}
 
-	modelSlice := []fileStorageModel{}
+	modelSlice := []model.StorageModel{}
 	err = json.Unmarshal(fileBytes, &modelSlice)
 	if err != nil {
 		utils.SugaredLogger.Debugln("readAllFromFile() couldn't unmarshal to slice", filename)
@@ -161,7 +140,7 @@ func (fs FileStorage) getFromFile(id string) (string, error) {
 	return "", custom.NoURLBy(id)
 }
 
-func (fs FileStorage) checkExistence(originalURL string) (*fileStorageModel, error) {
+func (fs FileStorage) checkExistence(originalURL string) (*model.StorageModel, error) {
 	models, err := fs.readAllFromFile()
 	if err != nil {
 		utils.SugaredLogger.Debugln("checkExistence() readAllFromFile error", err)
@@ -177,7 +156,7 @@ func (fs FileStorage) checkExistence(originalURL string) (*fileStorageModel, err
 	return nil, nil
 }
 
-func (fs FileStorage) saveToFile(model *fileStorageModel) error {
+func (fs FileStorage) saveToFile(model *model.StorageModel) error {
 
 	modelSlice, err := fs.readAllFromFile()
 	if err != nil {

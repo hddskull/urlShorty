@@ -20,7 +20,7 @@ func setupTest() error {
 		return err
 	}
 	//create file data
-	m := []fileStorageModel{
+	m := []StorageModel{
 		{
 			UUID:        "test",
 			ShortURL:    "t.ru",

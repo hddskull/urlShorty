@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"github.com/hddskull/urlShorty/config"
@@ -21,16 +22,32 @@ var _ Storage = newPostgresStorage()
 
 func (ps PostgresStorage) Setup() error {
 	var err error
+	//establish connection
 	dbConnection, err = sql.Open("postgres", config.DBCredentials)
-	//fmt.Println("\n\n", dbConnection, "\n")
 	if err != nil {
 		return err
 	}
 
+	//Ping
 	err = dbConnection.Ping()
 	if err != nil {
 		return err
 	}
+
+	//Create table
+	ctx := context.Background()
+	tableQuery := `
+	CREATE TABLE IF NOT EXISTS urls (
+		uuid UUID PRIMARY KEY,
+		shortURL TEXT NOT NULL,
+		originalURL TEXT NOT NULL
+	);`
+	_, err = dbConnection.ExecContext(ctx, tableQuery)
+	if err != nil {
+		return err
+	}
+
+	// Debug: insert test data into DB here
 
 	return nil
 }
