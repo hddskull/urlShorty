@@ -3,9 +3,10 @@ package storage
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"github.com/hddskull/urlShorty/config"
+	"github.com/hddskull/urlShorty/internal/model"
 	"github.com/hddskull/urlShorty/internal/utils"
+	"github.com/hddskull/urlShorty/tools/custom"
 )
 
 var dbConnection *sql.DB
@@ -54,16 +55,55 @@ func (ps PostgresStorage) Setup() error {
 
 func (ps PostgresStorage) Save(u string) (string, error) {
 	//TODO implement SAVE() method
-	return "", errors.New("implementation needed")
+	//return "", errors.New("implementation needed")
+
+	//check that url isn't empty
+	if u == "" {
+		utils.SugaredLogger.Debugln("Save() empty arg:", custom.ErrEmptyURL)
+		return "", custom.ErrEmptyURL
+	}
+
+	//check if url is already saved
+	existingUUID, err := ps.checkIfExists(u)
+	if err != nil {
+		utils.SugaredLogger.Debugln("checkExistence() err:", err)
+		return "", err
+	}
+
+	//if exists return uuid
+	if existingUUID != "" {
+		utils.SugaredLogger.Debugln("Save() url already saved:", existingUUID, u)
+		return existingUUID, nil
+	}
+
+	//create model
+	newModel, err := model.NewFileStorageModel(u)
+	if err != nil {
+		return "", err
+	}
+
+	//write query
+	query := "INSERT INTO urls (uuid, shortURL, originalURL) VALUES ($1, $2, $3);"
+	_, err = dbConnection.Exec(query, newModel.UUID, newModel.ShortURL, newModel.OriginalURL)
+	if err != nil {
+		return "", err
+	}
+
+	return newModel.ShortURL, nil
 }
 
 func (ps PostgresStorage) Get(id string) (string, error) {
-	//TODO implement GET() method
-	return "", errors.New("implementation needed")
+	query := "SELECT originalURL FROM urls WHERE uuid = $1;"
+	row := dbConnection.QueryRowContext(context.Background(), query, id)
+	var originalURL string
+	err := row.Scan(&originalURL)
+	if err != nil {
+		return "", err
+	}
+	return originalURL, nil
 }
 
 func (ps PostgresStorage) Ping() error {
-	//fmt.Println("\n\n", dbConnection, "\n")
 	err := dbConnection.Ping()
 	if err != nil {
 		utils.SugaredLogger.Errorln(err)
@@ -77,4 +117,17 @@ func (ps PostgresStorage) Close() error {
 		utils.SugaredLogger.Errorln(err)
 	}
 	return err
+}
+
+// Supporting methods
+func (ps PostgresStorage) checkIfExists(origin string) (string, error) {
+	query := "SELECT shortURL FROM urls WHERE originalURL = $1;"
+	row := dbConnection.QueryRowContext(context.Background(), query, origin)
+	var shortURL string
+	err := row.Scan(&shortURL)
+	if err != nil && err.Error() != "sql: no rows in result set" {
+		return "", err
+	}
+
+	return shortURL, nil
 }
