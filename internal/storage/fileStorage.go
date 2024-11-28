@@ -2,6 +2,7 @@ package storage
 
 import (
 	"encoding/json"
+	"errors"
 	"github.com/hddskull/urlShorty/config"
 	"github.com/hddskull/urlShorty/internal/model"
 	"github.com/hddskull/urlShorty/internal/utils"
@@ -64,7 +65,7 @@ func (fs FileStorage) Save(u string) (string, error) {
 		return existingModel.ShortURL, nil
 	}
 
-	model, err := model.NewFileStorageModel(u)
+	model, err := model.NewFileStorageModel(u, "")
 	if err != nil {
 		return "", err
 	}
@@ -76,6 +77,11 @@ func (fs FileStorage) Save(u string) (string, error) {
 	}
 
 	return model.ShortURL, nil
+}
+
+func (fs FileStorage) SaveBatch(arr []model.StorageModel) ([]model.StorageModel, error) {
+	//TODO implement SaveBatch() FileStorage
+	return nil, errors.New("SaveBatch() not yet implemented")
 }
 
 func (fs FileStorage) Get(id string) (string, error) {

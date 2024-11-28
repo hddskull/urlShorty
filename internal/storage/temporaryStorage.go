@@ -1,6 +1,8 @@
 package storage
 
 import (
+	"errors"
+	"github.com/hddskull/urlShorty/internal/model"
 	"github.com/hddskull/urlShorty/internal/utils"
 	"github.com/hddskull/urlShorty/tools/custom"
 )
@@ -31,6 +33,11 @@ func (ts TemporaryStorage) Save(u string) (string, error) {
 	ts.urls[id] = u
 
 	return id, nil
+}
+
+func (ts TemporaryStorage) SaveBatch(arr []model.StorageModel) ([]model.StorageModel, error) {
+	//TODO implement SaveBatch() TemporaryStorage
+	return nil, errors.New("SaveBatch() not yet implemented")
 }
 
 func (ts TemporaryStorage) Get(id string) (string, error) {

@@ -2,12 +2,14 @@ package storage
 
 import (
 	"github.com/hddskull/urlShorty/config"
+	"github.com/hddskull/urlShorty/internal/model"
 	"github.com/hddskull/urlShorty/internal/utils"
 )
 
 type Storage interface {
 	Setup() error
 	Save(u string) (string, error)
+	SaveBatch(arr []model.StorageModel) ([]model.StorageModel, error)
 	Get(id string) (string, error)
 	Ping() error
 	Close() error

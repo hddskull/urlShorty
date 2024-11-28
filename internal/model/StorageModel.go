@@ -8,9 +8,13 @@ type StorageModel struct {
 	OriginalURL string `json:"original_url"`
 }
 
-func NewFileStorageModel(originalURL string) (*StorageModel, error) {
+func NewFileStorageModel(originalURL, uuid string) (*StorageModel, error) {
 	//create uuid
-	uuid, err := utils.GenerateUUID()
+	var err error
+	if uuid == "" {
+		uuid, err = utils.GenerateUUID()
+	}
+
 	if err != nil {
 		return nil, err
 	}

@@ -54,9 +54,6 @@ func (ps PostgresStorage) Setup() error {
 }
 
 func (ps PostgresStorage) Save(u string) (string, error) {
-	//TODO implement SAVE() method
-	//return "", errors.New("implementation needed")
-
 	//check that url isn't empty
 	if u == "" {
 		utils.SugaredLogger.Debugln("Save() empty arg:", custom.ErrEmptyURL)
@@ -77,7 +74,7 @@ func (ps PostgresStorage) Save(u string) (string, error) {
 	}
 
 	//create model
-	newModel, err := model.NewFileStorageModel(u)
+	newModel, err := model.NewFileStorageModel(u, "")
 	if err != nil {
 		return "", err
 	}
@@ -90,6 +87,17 @@ func (ps PostgresStorage) Save(u string) (string, error) {
 	}
 
 	return newModel.ShortURL, nil
+}
+
+// TODO: Finish SaveBatch() PostgresStorage
+func (ps PostgresStorage) SaveBatch(arr []model.StorageModel) ([]model.StorageModel, error) {
+
+	//create transaction
+	//batch query
+	//return arr model
+
+	//if transaction successful return models
+	return arr, nil
 }
 
 func (ps PostgresStorage) Get(id string) (string, error) {

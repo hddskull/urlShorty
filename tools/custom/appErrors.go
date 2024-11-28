@@ -17,6 +17,8 @@ var ErrInvalidAddressPattern = errors.New("invalid host:port")
 var ErrEmptyURL = errors.New("empty url")
 var ErrEmptyPath = errors.New("empty path")
 var ErrEmptyEnvVar = errors.New("empty environment variable")
+var ErrEmptyBatch = errors.New("empty batch")
+var ErrInvalidBatch = errors.New("invalid model in batch")
 
 var ErrFuncUnsupported = errors.New("current implementation doesn't support such function")
 
