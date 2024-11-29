@@ -14,11 +14,11 @@ import (
 
 type (
 	batchRequestModel struct {
-		CorrelationId string `json:"correlation_id"`
+		CorrelationID string `json:"correlation_id"`
 		OriginalURL   string `json:"original_url"`
 	}
 	batchResponseModel struct {
-		CorrelationId string `json:"correlation_id"`
+		CorrelationID string `json:"correlation_id"`
 		ShortURL      string `json:"short_url"`
 	}
 
@@ -53,18 +53,30 @@ func BatchHandler(w http.ResponseWriter, r *http.Request) {
 
 	//validate and convert to storage model
 	storageModels, err := validateAndConvertBatch(reqBatch)
+	if err != nil {
+		utils.SugaredLogger.Debugln("BatchHandler validation or conversion error:", err)
+		formattedError := custom.ErrorResponseModel{Message: err.Error()}
+		custom.JSONError(w, formattedError, http.StatusBadRequest)
+		return
+	}
 
 	//save batch
 	savedModels, err := storage.Current.SaveBatch(storageModels)
 	if err != nil {
 		utils.SugaredLogger.Debugln("BatchHandler saving to storage error:", err)
 		formattedError := custom.ErrorResponseModel{Message: err.Error()}
-		custom.JSONError(w, formattedError, http.StatusBadRequest)
+		custom.JSONError(w, formattedError, http.StatusInternalServerError)
 		return
 	}
 
 	//convert to response model
 	savedBatch, err := convertToResponseModel(savedModels)
+	if err != nil {
+		utils.SugaredLogger.Debugln("BatchHandler validation or conversion error:", err)
+		formattedError := custom.ErrorResponseModel{Message: err.Error()}
+		custom.JSONError(w, formattedError, http.StatusBadRequest)
+		return
+	}
 
 	w.WriteHeader(http.StatusCreated)
 
@@ -72,7 +84,7 @@ func BatchHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		utils.SugaredLogger.Debugln("BatchHandler encoding error:", err)
 		formattedError := custom.ErrorResponseModel{Message: err.Error()}
-		custom.JSONError(w, formattedError, http.StatusBadRequest)
+		custom.JSONError(w, formattedError, http.StatusInternalServerError)
 		return
 	}
 }

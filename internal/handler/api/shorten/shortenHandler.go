@@ -64,7 +64,7 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		utils.SugaredLogger.Debugln("PostHandler encoding error:", err)
 		formattedError := custom.ErrorResponseModel{Message: err.Error()}
-		custom.JSONError(w, formattedError, http.StatusBadRequest)
+		custom.JSONError(w, formattedError, http.StatusInternalServerError)
 		return
 	}
 }
