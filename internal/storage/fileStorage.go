@@ -2,7 +2,6 @@ package storage
 
 import (
 	"encoding/json"
-	"errors"
 	"github.com/hddskull/urlShorty/config"
 	"github.com/hddskull/urlShorty/internal/model"
 	"github.com/hddskull/urlShorty/internal/utils"
@@ -80,8 +79,12 @@ func (fs FileStorage) Save(u string) (string, error) {
 }
 
 func (fs FileStorage) SaveBatch(arr []model.StorageModel) ([]model.StorageModel, error) {
-	//TODO implement SaveBatch() FileStorage
-	return nil, errors.New("SaveBatch() not yet implemented")
+	err := fs.saveBatchToFile(&arr)
+	if err != nil {
+		return nil, err
+	}
+
+	return arr, nil
 }
 
 func (fs FileStorage) Get(id string) (string, error) {
@@ -176,6 +179,39 @@ func (fs FileStorage) saveToFile(model *model.StorageModel) error {
 		return err
 	}
 
+	filename := config.StorageFileName
+
+	file, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	_, err = file.Write(data)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (fs FileStorage) saveBatchToFile(batch *[]model.StorageModel) error {
+	//read from file
+	modelSlice, err := fs.readAllFromFile()
+	if err != nil {
+		return err
+	}
+
+	//append new Data
+	modelSlice = append(modelSlice, *batch...)
+
+	//to json
+	data, err := json.Marshal(modelSlice)
+	if err != nil {
+		return err
+	}
+
+	//write to file
 	filename := config.StorageFileName
 
 	file, err := os.OpenFile(filename, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0666)
