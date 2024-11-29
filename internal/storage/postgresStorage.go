@@ -89,12 +89,32 @@ func (ps PostgresStorage) Save(u string) (string, error) {
 	return newModel.ShortURL, nil
 }
 
-// TODO: Finish SaveBatch() PostgresStorage
 func (ps PostgresStorage) SaveBatch(arr []model.StorageModel) ([]model.StorageModel, error) {
 
 	//create transaction
+	tx, err := dbConnection.Begin()
+	if err != nil {
+		return nil, err
+	}
+
+	//query
+	query := "INSERT INTO urls (uuid, shortURL, originalURL) VALUES ($1, $2, $3);"
+
 	//batch query
-	//return arr model
+	for _, v := range arr {
+		_, err = tx.Exec(query, v.UUID, v.ShortURL, v.OriginalURL)
+		if err != nil {
+			//on error roll back
+			tx.Rollback()
+			return nil, err
+		}
+	}
+
+	//commit
+	err = tx.Commit()
+	if err != nil {
+		return nil, err
+	}
 
 	//if transaction successful return models
 	return arr, nil
