@@ -85,10 +85,6 @@ func validateAndConvertBatch(batch requestBatch) ([]model.StorageModel, error) {
 
 	models := make([]model.StorageModel, len(batch))
 
-	fmt.Println()
-	fmt.Println(len(models), cap(models))
-	fmt.Println()
-
 	//validate batch item's field and convert to storage model
 	for i, item := range batch {
 		if item.OriginalURL == "" || item.CorrelationId == "" {
