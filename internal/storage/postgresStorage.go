@@ -121,7 +121,7 @@ func (ps PostgresStorage) SaveBatch(arr []model.StorageModel) ([]model.StorageMo
 }
 
 func (ps PostgresStorage) Get(id string) (string, error) {
-	query := "SELECT originalURL FROM urls WHERE uuid = $1;"
+	query := "SELECT originalURL FROM urls WHERE shortURL = $1;"
 	row := dbConnection.QueryRowContext(context.Background(), query, id)
 	var originalURL string
 	err := row.Scan(&originalURL)
