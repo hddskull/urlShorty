@@ -99,11 +99,11 @@ func validateAndConvertBatch(batch requestBatch) ([]model.StorageModel, error) {
 
 	//validate batch item's field and convert to storage model
 	for i, item := range batch {
-		if item.OriginalURL == "" || item.CorrelationId == "" {
+		if item.OriginalURL == "" || item.CorrelationID == "" {
 			return nil, custom.ErrInvalidBatch
 		}
 
-		m, err := model.NewFileStorageModel(item.OriginalURL, item.CorrelationId)
+		m, err := model.NewFileStorageModel(item.OriginalURL, item.CorrelationID)
 		if err != nil {
 			return nil, err
 		}
@@ -117,7 +117,7 @@ func convertToResponseModel(arr []model.StorageModel) (responseBatch, error) {
 	respBatch := make(responseBatch, len(arr))
 	for i, item := range arr {
 		brm := batchResponseModel{
-			CorrelationId: item.UUID,
+			CorrelationID: item.UUID,
 			ShortURL:      fmt.Sprint("http://", config.Address.BaseURL, "/", item.ShortURL),
 		}
 		respBatch[i] = brm
