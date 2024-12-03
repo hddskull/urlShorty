@@ -69,16 +69,31 @@ func (ps PostgresStorage) Save(u string) (string, error) {
 		return "", err
 	}
 
+	//create transaction
+	tx, err := dbConnection.Begin()
+	if err != nil {
+		return "", err
+	}
+
 	//write query
 	query := "INSERT INTO urls (uuid, shortURL, originalURL) VALUES ($1, $2, $3);"
-	_, err = dbConnection.Exec(query, newModel.UUID, newModel.ShortURL, newModel.OriginalURL)
+	_, err = tx.Exec(query, newModel.UUID, newModel.ShortURL, newModel.OriginalURL)
+
 	if err != nil {
+		//on error roll back
+		tx.Rollback()
 
 		var pqErr *pq.Error
 		if errors.As(err, &pqErr); pqErr.Code == pgerrcode.UniqueViolation {
 			return "", handleUniqueViolation(newModel.OriginalURL, pqErr)
 		}
 
+		return "", err
+	}
+
+	//commit
+	err = tx.Commit()
+	if err != nil {
 		return "", err
 	}
 

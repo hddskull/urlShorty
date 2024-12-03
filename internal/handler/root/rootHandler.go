@@ -53,7 +53,6 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 		var uvError *custom.UniqueViolationError
 		if errors.As(err, &uvError) {
 			fullID := fmt.Sprint("http://", config.Address.BaseURL, "/", uvError.ShortURL)
-			w.WriteHeader(http.StatusConflict)
 			http.Error(w, fullID, http.StatusConflict)
 			return
 		}
