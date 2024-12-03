@@ -7,7 +7,6 @@ import (
 	"github.com/hddskull/urlShorty/internal/handler/api/shorten/batch"
 	"github.com/hddskull/urlShorty/internal/handler/root"
 	customMiddleware "github.com/hddskull/urlShorty/internal/middleware"
-	_ "github.com/lib/pq"
 	"net/http"
 )
 

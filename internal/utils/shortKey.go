@@ -22,11 +22,5 @@ func GenerateShortKey() string {
 
 func GenerateUUID() (string, error) {
 	newUUID := uuid.New().String()
-	//newUUID, err := exec.Command(UUIDCommand).Output()
-	//if err != nil {
-	//	return "", err
-	//}
-	//strUUID := string(newUUID)
-	//strUUID = strUUID[:len(strUUID)-1]
 	return newUUID, nil
 }

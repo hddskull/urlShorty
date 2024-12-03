@@ -3,6 +3,7 @@ package shorten
 import (
 	"compress/gzip"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/hddskull/urlShorty/internal/storage"
 	"net/http"
@@ -47,8 +48,18 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 	id, err := storage.Current.Save(reqModel.URL)
 	if err != nil {
 		utils.SugaredLogger.Debugln("PostHandler saving to storage error:", err)
-		formattedError := custom.ErrorResponseModel{Message: err.Error()}
-		custom.JSONError(w, formattedError, http.StatusBadRequest)
+		var uvError *custom.UniqueViolationError
+		if errors.As(err, &uvError) {
+			resModel := responsePostModel{
+				Result: fmt.Sprint("http://", config.Address.BaseURL, "/", uvError.ShortURL),
+			}
+			w.WriteHeader(http.StatusConflict)
+			json.NewEncoder(w).Encode(resModel)
+		} else {
+			formattedError := custom.ErrorResponseModel{Message: err.Error()}
+			custom.JSONError(w, formattedError, http.StatusBadRequest)
+		}
+
 		return
 	}
 

@@ -3,10 +3,13 @@ package storage
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"github.com/hddskull/urlShorty/config"
 	"github.com/hddskull/urlShorty/internal/model"
 	"github.com/hddskull/urlShorty/internal/utils"
 	"github.com/hddskull/urlShorty/tools/custom"
+	"github.com/jackc/pgerrcode"
+	"github.com/lib/pq"
 )
 
 var dbConnection *sql.DB
@@ -60,19 +63,6 @@ func (ps PostgresStorage) Save(u string) (string, error) {
 		return "", custom.ErrEmptyURL
 	}
 
-	//check if url is already saved
-	existingUUID, err := ps.checkIfExists(u)
-	if err != nil {
-		utils.SugaredLogger.Debugln("checkExistence() err:", err)
-		return "", err
-	}
-
-	//if exists return uuid
-	if existingUUID != "" {
-		utils.SugaredLogger.Debugln("Save() url already saved:", existingUUID, u)
-		return existingUUID, nil
-	}
-
 	//create model
 	newModel, err := model.NewFileStorageModel(u, "")
 	if err != nil {
@@ -83,6 +73,12 @@ func (ps PostgresStorage) Save(u string) (string, error) {
 	query := "INSERT INTO urls (uuid, shortURL, originalURL) VALUES ($1, $2, $3);"
 	_, err = dbConnection.Exec(query, newModel.UUID, newModel.ShortURL, newModel.OriginalURL)
 	if err != nil {
+
+		var pqErr *pq.Error
+		if errors.As(err, &pqErr); pqErr.Code == pgerrcode.UniqueViolation {
+			return "", handleUniqueViolation(newModel.OriginalURL, pqErr)
+		}
+
 		return "", err
 	}
 
@@ -158,4 +154,16 @@ func (ps PostgresStorage) checkIfExists(origin string) (string, error) {
 	}
 
 	return shortURL, nil
+}
+
+func handleUniqueViolation(originalURL string, originalError error) error {
+	query := "SELECT shortURL FROM urls WHERE originalURL = $1;"
+	row := dbConnection.QueryRowContext(context.Background(), query, originalURL)
+	var shortURL string
+	err := row.Scan(&shortURL)
+	if err != nil {
+		return err
+	}
+
+	return custom.NewUniqueViolationError(originalError, shortURL)
 }

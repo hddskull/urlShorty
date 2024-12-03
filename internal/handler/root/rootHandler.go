@@ -2,8 +2,10 @@ package root
 
 import (
 	"compress/gzip"
+	"errors"
 	"fmt"
 	"github.com/hddskull/urlShorty/internal/storage"
+	"github.com/hddskull/urlShorty/tools/custom"
 	"io"
 	"net/http"
 	"strings"
@@ -48,6 +50,14 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 	bodyS := string(bodyB)
 	id, err := storage.Current.Save(bodyS)
 	if err != nil {
+		var uvError *custom.UniqueViolationError
+		if errors.As(err, &uvError) {
+			fullID := fmt.Sprint("http://", config.Address.BaseURL, "/", uvError.ShortURL)
+			w.WriteHeader(http.StatusConflict)
+			http.Error(w, fullID, http.StatusConflict)
+			return
+		}
+
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

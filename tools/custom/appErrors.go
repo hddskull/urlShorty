@@ -11,6 +11,26 @@ type ErrorResponseModel struct {
 	Message string `json:"message"`
 }
 
+type UniqueViolationError struct {
+	Err      error
+	ShortURL string
+}
+
+func (e *UniqueViolationError) Error() string {
+	return fmt.Sprintf("%v; original: %v", e.Err, e.ShortURL)
+}
+
+func (e *UniqueViolationError) Unwrap() error {
+	return e.Err
+}
+
+func NewUniqueViolationError(err error, shortURL string) error {
+	return &UniqueViolationError{
+		Err:      err,
+		ShortURL: shortURL,
+	}
+}
+
 var ErrNoServerAddress = errors.New("no server address")
 var ErrInvalidAddressPattern = errors.New("invalid host:port")
 
