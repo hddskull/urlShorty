@@ -79,7 +79,7 @@ func (ps PostgresStorage) Save(u string) (string, error) {
 	query := "INSERT INTO urls (uuid, shortURL, originalURL) VALUES ($1, $2, $3);"
 	_, err = tx.Exec(query, newModel.UUID, newModel.ShortURL, newModel.OriginalURL)
 
-	utils.SugaredLogger.Debugln("PostgresStorage: Save()", u, "err:", err.Error())
+	utils.SugaredLogger.Debugln("PostgresStorage: Save()", u, "err:", err)
 
 	if err != nil {
 		//on error roll back
