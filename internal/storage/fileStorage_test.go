@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/hddskull/urlShorty/config"
 	"github.com/hddskull/urlShorty/internal/model"
@@ -147,7 +148,7 @@ func TestFileStorage_Save(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			shortened, err := testStorage.Save(tc.originalURL)
+			shortened, err := testStorage.Save(context.Background(), tc.originalURL)
 			if tc.returnError {
 				assert.Equal(t, "", shortened)
 				require.Error(t, err)
@@ -166,11 +167,11 @@ func TestFileStorage_Get(t *testing.T) {
 	err := setupTest()
 	require.NoError(t, err)
 
-	shortPracticum, err := testStorage.Save("https://practicum.yandex.ru/")
+	shortPracticum, err := testStorage.Save(context.Background(), "https://practicum.yandex.ru/")
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = testStorage.Save("https://yandex.ru/")
+	_, err = testStorage.Save(context.Background(), "https://yandex.ru/")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -196,7 +197,7 @@ func TestFileStorage_Get(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			original, err := testStorage.Get(tc.shortURL)
+			original, err := testStorage.Get(context.Background(), tc.shortURL)
 
 			if tc.returnError {
 				assert.Equal(t, "", original)

@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -41,9 +42,9 @@ func TestTemporaryStorage(t *testing.T) {
 			var err error
 
 			if tc.fType == save {
-				str, err = storage.Save(tc.url)
+				str, err = storage.Save(context.Background(), tc.url)
 			} else {
-				str, err = storage.Get(tc.id)
+				str, err = storage.Get(context.Background(), tc.id)
 			}
 
 			assert.Error(t, err)
@@ -56,10 +57,10 @@ func TestTemporaryStorage(t *testing.T) {
 
 	t.Run("save() + get() success", func(t *testing.T) {
 
-		id, err := storage.Save(url)
+		id, err := storage.Save(context.Background(), url)
 		require.NoError(t, err)
 
-		savedURL, err := storage.Get(id)
+		savedURL, err := storage.Get(context.Background(), id)
 		require.NoError(t, err)
 		assert.Equal(t, url, savedURL)
 	})
