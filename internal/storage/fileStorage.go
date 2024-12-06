@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/hddskull/urlShorty/config"
 	"github.com/hddskull/urlShorty/internal/model"
@@ -45,7 +46,11 @@ func (fs FileStorage) Setup() error {
 	return err
 }
 
-func (fs FileStorage) Save(u string) (string, error) {
+func (fs FileStorage) Close() error {
+	return custom.ErrFuncUnsupported
+}
+
+func (fs FileStorage) Save(ctx context.Context, u string) (string, error) {
 	if u == "" {
 		utils.SugaredLogger.Debugln("Save() empty arg:", custom.ErrEmptyURL)
 		return "", custom.ErrEmptyURL
@@ -78,7 +83,7 @@ func (fs FileStorage) Save(u string) (string, error) {
 	return model.ShortURL, nil
 }
 
-func (fs FileStorage) SaveBatch(arr []model.StorageModel) ([]model.StorageModel, error) {
+func (fs FileStorage) SaveBatch(ctx context.Context, arr []model.StorageModel) ([]model.StorageModel, error) {
 	err := fs.saveBatchToFile(&arr)
 	if err != nil {
 		return nil, err
@@ -87,7 +92,7 @@ func (fs FileStorage) SaveBatch(arr []model.StorageModel) ([]model.StorageModel,
 	return arr, nil
 }
 
-func (fs FileStorage) Get(id string) (string, error) {
+func (fs FileStorage) Get(ctx context.Context, id string) (string, error) {
 	if id == "" {
 		return "", custom.ErrEmptyURL
 	}
@@ -100,11 +105,7 @@ func (fs FileStorage) Get(id string) (string, error) {
 	return originalURL, nil
 }
 
-func (fs FileStorage) Ping() error {
-	return custom.ErrFuncUnsupported
-}
-
-func (fs FileStorage) Close() error {
+func (fs FileStorage) Ping(ctx context.Context) error {
 	return custom.ErrFuncUnsupported
 }
 

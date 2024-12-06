@@ -45,7 +45,7 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	id, err := storage.Current.Save(reqModel.URL)
+	id, err := storage.Current.Save(r.Context(), reqModel.URL)
 	if err != nil {
 		utils.SugaredLogger.Debugln("PostHandler saving to storage error:", err)
 		var uvError *custom.UniqueViolationError

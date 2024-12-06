@@ -56,7 +56,15 @@ func (ps PostgresStorage) Setup() error {
 	return nil
 }
 
-func (ps PostgresStorage) Save(u string) (string, error) {
+func (ps PostgresStorage) Close() error {
+	err := dbConnection.Close()
+	if err != nil {
+		utils.SugaredLogger.Errorln(err)
+	}
+	return err
+}
+
+func (ps PostgresStorage) Save(ctx context.Context, u string) (string, error) {
 	//check that url isn't empty
 	if u == "" {
 		utils.SugaredLogger.Debugln("Save() empty arg:", custom.ErrEmptyURL)
@@ -77,7 +85,7 @@ func (ps PostgresStorage) Save(u string) (string, error) {
 
 	//write query
 	query := "INSERT INTO urls (uuid, shortURL, originalURL) VALUES ($1, $2, $3);"
-	_, err = tx.Exec(query, newModel.UUID, newModel.ShortURL, newModel.OriginalURL)
+	_, err = tx.ExecContext(ctx, query, newModel.UUID, newModel.ShortURL, newModel.OriginalURL)
 
 	utils.SugaredLogger.Debugln("PostgresStorage: Save()", u, "err:", err)
 
@@ -102,7 +110,7 @@ func (ps PostgresStorage) Save(u string) (string, error) {
 	return newModel.ShortURL, nil
 }
 
-func (ps PostgresStorage) SaveBatch(arr []model.StorageModel) ([]model.StorageModel, error) {
+func (ps PostgresStorage) SaveBatch(ctx context.Context, arr []model.StorageModel) ([]model.StorageModel, error) {
 
 	//create transaction
 	tx, err := dbConnection.Begin()
@@ -115,7 +123,7 @@ func (ps PostgresStorage) SaveBatch(arr []model.StorageModel) ([]model.StorageMo
 
 	//batch query
 	for _, v := range arr {
-		_, err = tx.Exec(query, v.UUID, v.ShortURL, v.OriginalURL)
+		_, err = tx.ExecContext(ctx, query, v.UUID, v.ShortURL, v.OriginalURL)
 		if err != nil {
 			//on error roll back
 			tx.Rollback()
@@ -133,9 +141,9 @@ func (ps PostgresStorage) SaveBatch(arr []model.StorageModel) ([]model.StorageMo
 	return arr, nil
 }
 
-func (ps PostgresStorage) Get(id string) (string, error) {
+func (ps PostgresStorage) Get(ctx context.Context, id string) (string, error) {
 	query := "SELECT originalURL FROM urls WHERE shortURL = $1;"
-	row := dbConnection.QueryRowContext(context.Background(), query, id)
+	row := dbConnection.QueryRowContext(ctx, query, id)
 	var originalURL string
 	err := row.Scan(&originalURL)
 	if err != nil {
@@ -144,33 +152,12 @@ func (ps PostgresStorage) Get(id string) (string, error) {
 	return originalURL, nil
 }
 
-func (ps PostgresStorage) Ping() error {
+func (ps PostgresStorage) Ping(ctx context.Context) error {
 	err := dbConnection.Ping()
 	if err != nil {
 		utils.SugaredLogger.Errorln(err)
 	}
 	return err
-}
-
-func (ps PostgresStorage) Close() error {
-	err := dbConnection.Close()
-	if err != nil {
-		utils.SugaredLogger.Errorln(err)
-	}
-	return err
-}
-
-// Supporting methods
-func (ps PostgresStorage) checkIfExists(origin string) (string, error) {
-	query := "SELECT shortURL FROM urls WHERE originalURL = $1;"
-	row := dbConnection.QueryRowContext(context.Background(), query, origin)
-	var shortURL string
-	err := row.Scan(&shortURL)
-	if err != nil && err.Error() != "sql: no rows in result set" {
-		return "", err
-	}
-
-	return shortURL, nil
 }
 
 func handleUniqueViolation(originalURL string, originalError error) error {

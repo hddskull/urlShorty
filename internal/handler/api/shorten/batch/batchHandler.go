@@ -61,7 +61,7 @@ func BatchHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//save batch
-	savedModels, err := storage.Current.SaveBatch(storageModels)
+	savedModels, err := storage.Current.SaveBatch(r.Context(), storageModels)
 	if err != nil {
 		utils.SugaredLogger.Debugln("BatchHandler saving to storage error:", err)
 		formattedError := custom.ErrorResponseModel{Message: err.Error()}

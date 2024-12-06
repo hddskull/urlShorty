@@ -17,7 +17,7 @@ func GetHandler(w http.ResponseWriter, r *http.Request) {
 	arr := strings.Split(r.URL.Path, "/")
 	id := arr[len(arr)-1]
 
-	url, err := storage.Current.Get(id)
+	url, err := storage.Current.Get(r.Context(), id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -48,7 +48,7 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	bodyS := string(bodyB)
-	id, err := storage.Current.Save(bodyS)
+	id, err := storage.Current.Save(r.Context(), bodyS)
 	if err != nil {
 		var uvError *custom.UniqueViolationError
 		if errors.As(err, &uvError) {
@@ -69,7 +69,7 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func PingHandler(w http.ResponseWriter, r *http.Request) {
-	err := storage.Current.Ping()
+	err := storage.Current.Ping(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"context"
 	"github.com/hddskull/urlShorty/config"
 	"github.com/hddskull/urlShorty/internal/model"
 	"github.com/hddskull/urlShorty/internal/utils"
@@ -8,11 +9,11 @@ import (
 
 type Storage interface {
 	Setup() error
-	Save(u string) (string, error)
-	SaveBatch(arr []model.StorageModel) ([]model.StorageModel, error)
-	Get(id string) (string, error)
-	Ping() error
 	Close() error
+	Save(ctx context.Context, u string) (string, error)
+	SaveBatch(ctx context.Context, arr []model.StorageModel) ([]model.StorageModel, error)
+	Get(ctx context.Context, id string) (string, error)
+	Ping(ctx context.Context) error
 }
 
 var Current Storage
