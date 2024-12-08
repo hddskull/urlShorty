@@ -10,15 +10,19 @@ import (
 	"github.com/hddskull/urlShorty/tools/custom"
 	"github.com/jackc/pgerrcode"
 	"github.com/lib/pq"
+	"sync"
 )
 
 var dbConnection *sql.DB
 
 type PostgresStorage struct {
+	mx sync.Mutex
 }
 
 func newPostgresStorage() *PostgresStorage {
-	return &PostgresStorage{}
+	return &PostgresStorage{
+		mx: sync.Mutex{},
+	}
 }
 
 // Storage interface
@@ -77,6 +81,9 @@ func (ps PostgresStorage) Save(ctx context.Context, u string) (string, error) {
 		return "", err
 	}
 
+	ps.mx.Lock()
+	defer ps.mx.Unlock()
+
 	//create transaction
 	tx, err := dbConnection.Begin()
 	if err != nil {
@@ -111,6 +118,9 @@ func (ps PostgresStorage) Save(ctx context.Context, u string) (string, error) {
 }
 
 func (ps PostgresStorage) SaveBatch(ctx context.Context, arr []model.StorageModel) ([]model.StorageModel, error) {
+
+	ps.mx.Lock()
+	defer ps.mx.Unlock()
 
 	//create transaction
 	tx, err := dbConnection.Begin()
