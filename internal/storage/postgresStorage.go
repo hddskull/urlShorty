@@ -16,12 +16,12 @@ import (
 var dbConnection *sql.DB
 
 type PostgresStorage struct {
-	mx sync.Mutex
+	mx *sync.Mutex
 }
 
 func newPostgresStorage() *PostgresStorage {
 	return &PostgresStorage{
-		mx: sync.Mutex{},
+		mx: &sync.Mutex{},
 	}
 }
 
