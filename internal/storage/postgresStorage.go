@@ -16,17 +16,17 @@ import (
 var dbConnection *sql.DB
 
 type PostgresStorage struct {
-	sync.Mutex
+	*sync.Mutex
 }
 
 func newPostgresStorage() *PostgresStorage {
-	return &PostgresStorage{}
+	return &PostgresStorage{&sync.Mutex{}}
 }
 
 // Storage interface
 var _ Storage = newPostgresStorage()
 
-func (ps PostgresStorage) Setup() error {
+func (ps *PostgresStorage) Setup() error {
 	var err error
 	//establish connection
 	dbConnection, err = sql.Open("postgres", config.DBCredentials)
@@ -58,7 +58,7 @@ func (ps PostgresStorage) Setup() error {
 	return nil
 }
 
-func (ps PostgresStorage) Close() error {
+func (ps *PostgresStorage) Close() error {
 	err := dbConnection.Close()
 	if err != nil {
 		utils.SugaredLogger.Errorln(err)
@@ -66,7 +66,7 @@ func (ps PostgresStorage) Close() error {
 	return err
 }
 
-func (ps PostgresStorage) Save(ctx context.Context, u string) (string, error) {
+func (ps *PostgresStorage) Save(ctx context.Context, u string) (string, error) {
 	//check that url isn't empty
 	if u == "" {
 		utils.SugaredLogger.Debugln("Save() empty arg:", custom.ErrEmptyURL)
@@ -115,7 +115,7 @@ func (ps PostgresStorage) Save(ctx context.Context, u string) (string, error) {
 	return newModel.ShortURL, nil
 }
 
-func (ps PostgresStorage) SaveBatch(ctx context.Context, arr []model.StorageModel) ([]model.StorageModel, error) {
+func (ps *PostgresStorage) SaveBatch(ctx context.Context, arr []model.StorageModel) ([]model.StorageModel, error) {
 
 	ps.Lock()
 	defer ps.Unlock()
@@ -149,7 +149,7 @@ func (ps PostgresStorage) SaveBatch(ctx context.Context, arr []model.StorageMode
 	return arr, nil
 }
 
-func (ps PostgresStorage) Get(ctx context.Context, id string) (string, error) {
+func (ps *PostgresStorage) Get(ctx context.Context, id string) (string, error) {
 	query := "SELECT originalURL FROM urls WHERE shortURL = $1;"
 	row := dbConnection.QueryRowContext(ctx, query, id)
 	var originalURL string
@@ -160,7 +160,7 @@ func (ps PostgresStorage) Get(ctx context.Context, id string) (string, error) {
 	return originalURL, nil
 }
 
-func (ps PostgresStorage) Ping(ctx context.Context) error {
+func (ps *PostgresStorage) Ping(ctx context.Context) error {
 	err := dbConnection.Ping()
 	if err != nil {
 		utils.SugaredLogger.Errorln(err)
