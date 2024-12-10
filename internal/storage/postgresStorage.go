@@ -3,13 +3,12 @@ package storage
 import (
 	"context"
 	"database/sql"
-	"errors"
+	"fmt"
 	"github.com/hddskull/urlShorty/config"
 	"github.com/hddskull/urlShorty/internal/model"
 	"github.com/hddskull/urlShorty/internal/utils"
 	"github.com/hddskull/urlShorty/tools/custom"
-	"github.com/jackc/pgerrcode"
-	"github.com/lib/pq"
+	_ "github.com/lib/pq"
 	"sync"
 )
 
@@ -89,8 +88,8 @@ func (ps *PostgresStorage) Save(ctx context.Context, u string) (string, error) {
 	}
 
 	//write query
-	query := "INSERT INTO urls (uuid, shortURL, originalURL) VALUES ($1, $2, $3);"
-	_, err = tx.ExecContext(ctx, query, newModel.UUID, newModel.ShortURL, newModel.OriginalURL)
+	query := "INSERT INTO urls (uuid, shortURL, originalURL) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING;"
+	res, err := tx.ExecContext(ctx, query, newModel.UUID, newModel.ShortURL, newModel.OriginalURL)
 
 	utils.SugaredLogger.Debugln("PostgresStorage: Save()", u, "err:", err)
 
@@ -98,13 +97,30 @@ func (ps *PostgresStorage) Save(ctx context.Context, u string) (string, error) {
 		//on error roll back
 		tx.Rollback()
 
-		var pqErr *pq.Error
-		if errors.As(err, &pqErr); pqErr.Code == pgerrcode.UniqueViolation {
-			return "", handleUniqueViolation(newModel.OriginalURL, pqErr)
-		}
-
 		return "", err
 	}
+
+	affRows, err := res.RowsAffected()
+	utils.SugaredLogger.Debugln("RowsAffected", affRows)
+
+	//conflict on INSERT
+	if affRows == 0 {
+		tx.Rollback()
+
+		return "", handleUniqueViolation(newModel.OriginalURL)
+	}
+
+	//if err != nil {
+	//	//on error roll back
+	//	tx.Rollback()
+	//
+	//	var pqErr *pq.Error
+	//	if errors.As(err, &pqErr); pqErr.Code == pgerrcode.UniqueViolation {
+	//		return "", handleUniqueViolation(newModel.OriginalURL, pqErr)
+	//	}
+	//
+	//	return "", err
+	//}
 
 	//commit
 	err = tx.Commit()
@@ -168,7 +184,7 @@ func (ps *PostgresStorage) Ping(ctx context.Context) error {
 	return err
 }
 
-func handleUniqueViolation(originalURL string, originalError error) error {
+func handleUniqueViolation(originalURL string) error {
 	query := "SELECT shortURL FROM urls WHERE originalURL = $1;"
 	row := dbConnection.QueryRowContext(context.Background(), query, originalURL)
 	var shortURL string
@@ -177,5 +193,5 @@ func handleUniqueViolation(originalURL string, originalError error) error {
 		return err
 	}
 
-	return custom.NewUniqueViolationError(originalError, shortURL)
+	return custom.NewUniqueViolationError(fmt.Errorf("duplicate of %s", originalURL), shortURL)
 }
