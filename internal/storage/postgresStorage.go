@@ -88,27 +88,57 @@ func (ps *PostgresStorage) Save(ctx context.Context, u string) (string, error) {
 	}
 
 	//write query
-	query := "INSERT INTO urls (uuid, shortURL, originalURL) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING;"
-	res, err := tx.ExecContext(ctx, query, newModel.UUID, newModel.ShortURL, newModel.OriginalURL)
+	//query := "INSERT INTO urls (uuid, shortURL, originalURL) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING;"
+	//res, err := tx.ExecContext(ctx, query, newModel.UUID, newModel.ShortURL, newModel.OriginalURL)
 
-	utils.SugaredLogger.Debugln("PostgresStorage: Save()", u, "err:", err)
+	//NewQuery
+	query := `
+		WITH insert_attempt AS (
+			INSERT INTO urls (uuid, shortURL, originalURL)
+			VALUES ($1, $2, $3)
+			ON CONFLICT (originalURL) DO NOTHING
+			RETURNING shortURL
+		)
+		SELECT
+			CASE
+				WHEN EXISTS (SELECT 1 FROM insert_attempt) THEN false
+				ELSE true
+			END AS conflict,
+			COALESCE((SELECT shortURL FROM insert_attempt), (SELECT shortURL FROM urls WHERE originalURL = $3)) AS shortURL;
+	`
+
+	//INTO conflict, _short_url;
+	//
+	//RAISE NOTICE 'Conflict: %, Short URL: %', conflict, _short_url;
+
+	row := dbConnection.QueryRowContext(ctx, query, newModel.UUID, newModel.ShortURL, newModel.OriginalURL)
+	var isConflict bool
+	var shortURL string
+	err = row.Scan(&isConflict, &shortURL)
+	utils.SugaredLogger.Debugln("scanned row| isConflict:", isConflict, "|shortURL:", shortURL, "|err:", err)
 
 	if err != nil {
-		//on error roll back
 		tx.Rollback()
-
 		return "", err
 	}
+	if isConflict {
+		tx.Rollback()
+		conflictErr := custom.NewUniqueViolationError(fmt.Errorf("duplicate of %s", newModel.OriginalURL), shortURL)
+		return "", conflictErr
+	}
+	//affRows, err := res.RowsAffected()
+	//utils.SugaredLogger.Debugln("RowsAffected", affRows)
 
-	affRows, err := res.RowsAffected()
-	utils.SugaredLogger.Debugln("RowsAffected", affRows)
+	//if err != nil {
+	//	tx.Rollback()
+	//	return "", err
+	//}
 
 	//conflict on INSERT
-	if affRows == 0 {
-		tx.Rollback()
-
-		return "", handleUniqueViolation(newModel.OriginalURL)
-	}
+	//if affRows == 0 {
+	//	tx.Rollback()
+	//	return "", handleUniqueViolation(newModel.OriginalURL)
+	//}
 
 	//if err != nil {
 	//	//on error roll back
