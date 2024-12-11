@@ -9,17 +9,15 @@ import (
 	"github.com/hddskull/urlShorty/internal/utils"
 	"github.com/hddskull/urlShorty/tools/custom"
 	_ "github.com/lib/pq"
-	"sync"
 )
 
 var dbConnection *sql.DB
 
 type PostgresStorage struct {
-	*sync.Mutex
 }
 
 func newPostgresStorage() *PostgresStorage {
-	return &PostgresStorage{&sync.Mutex{}}
+	return &PostgresStorage{}
 }
 
 // Storage interface
@@ -78,9 +76,6 @@ func (ps *PostgresStorage) Save(ctx context.Context, u string) (string, error) {
 		return "", err
 	}
 
-	ps.Lock()
-	defer ps.Unlock()
-
 	//create transaction
 	tx, err := dbConnection.Begin()
 	if err != nil {
@@ -93,29 +88,19 @@ func (ps *PostgresStorage) Save(ctx context.Context, u string) (string, error) {
 
 	//NewQuery
 	query := `
-		WITH insert_attempt AS (
-			INSERT INTO urls (uuid, shortURL, originalURL)
+		INSERT INTO urls (uuid, shortURL, originalURL)
 			VALUES ($1, $2, $3)
-			ON CONFLICT (originalURL) DO NOTHING
-			RETURNING shortURL
-		)
-		SELECT
-			CASE
-				WHEN EXISTS (SELECT 1 FROM insert_attempt) THEN false
-				ELSE true
-			END AS conflict,
-			COALESCE((SELECT shortURL FROM insert_attempt), (SELECT shortURL FROM urls WHERE originalURL = $3)) AS shortURL;
+			ON CONFLICT (originalURL) 
+			DO UPDATE SET
+    			originalURL=EXCLUDED.originalURL
+			RETURNING shortURL != $2, shortURL
 	`
-
-	//INTO conflict, _short_url;
-	//
-	//RAISE NOTICE 'Conflict: %, Short URL: %', conflict, _short_url;
 
 	row := dbConnection.QueryRowContext(ctx, query, newModel.UUID, newModel.ShortURL, newModel.OriginalURL)
 	var isConflict bool
 	var shortURL string
 	err = row.Scan(&isConflict, &shortURL)
-	utils.SugaredLogger.Debugln("scanned row| isConflict:", isConflict, "|shortURL:", shortURL, "|err:", err)
+	utils.SugaredLogger.Debugln("Save(): isConflict:", isConflict, "|shortURL:", shortURL, "|err:", err)
 
 	if err != nil {
 		tx.Rollback()
@@ -126,31 +111,6 @@ func (ps *PostgresStorage) Save(ctx context.Context, u string) (string, error) {
 		conflictErr := custom.NewUniqueViolationError(fmt.Errorf("duplicate of %s", newModel.OriginalURL), shortURL)
 		return "", conflictErr
 	}
-	//affRows, err := res.RowsAffected()
-	//utils.SugaredLogger.Debugln("RowsAffected", affRows)
-
-	//if err != nil {
-	//	tx.Rollback()
-	//	return "", err
-	//}
-
-	//conflict on INSERT
-	//if affRows == 0 {
-	//	tx.Rollback()
-	//	return "", handleUniqueViolation(newModel.OriginalURL)
-	//}
-
-	//if err != nil {
-	//	//on error roll back
-	//	tx.Rollback()
-	//
-	//	var pqErr *pq.Error
-	//	if errors.As(err, &pqErr); pqErr.Code == pgerrcode.UniqueViolation {
-	//		return "", handleUniqueViolation(newModel.OriginalURL, pqErr)
-	//	}
-	//
-	//	return "", err
-	//}
 
 	//commit
 	err = tx.Commit()
@@ -162,9 +122,6 @@ func (ps *PostgresStorage) Save(ctx context.Context, u string) (string, error) {
 }
 
 func (ps *PostgresStorage) SaveBatch(ctx context.Context, arr []model.StorageModel) ([]model.StorageModel, error) {
-
-	ps.Lock()
-	defer ps.Unlock()
 
 	//create transaction
 	tx, err := dbConnection.Begin()
