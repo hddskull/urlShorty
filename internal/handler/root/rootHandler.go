@@ -30,6 +30,7 @@ func GetHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func PostHandler(w http.ResponseWriter, r *http.Request) {
+	utils.SugaredLogger.Debugln("(root)/ PostHandler() called")
 	reader := r.Body
 
 	if r.Header.Get(`Content-Encoding`) == `gzip` {

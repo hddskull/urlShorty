@@ -64,8 +64,7 @@ func (ps *PostgresStorage) Close() error {
 }
 
 func (ps *PostgresStorage) Save(ctx context.Context, u string) (string, error) {
-	//check that url isn't empty
-
+	utils.SugaredLogger.Debugln("Save() called")
 	//create model
 	newModel, err := model.NewFileStorageModel(u, "")
 	if err != nil {
