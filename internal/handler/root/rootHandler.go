@@ -39,10 +39,12 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 		reader = gz
+		utils.SugaredLogger.Debugln("(root)/ PostHandler() reader decoded from gzip")
 	}
 	defer reader.Close()
 
 	bodyB, err := io.ReadAll(reader)
+	utils.SugaredLogger.Debugln("(root)/ PostHandler() body bytes read")
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -50,6 +52,7 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	bodyS := string(bodyB)
+	utils.SugaredLogger.Debugln("(root)/ PostHandler() body bytes to string")
 
 	if bodyS == "" {
 		utils.SugaredLogger.Debugln("Save() empty arg:", custom.ErrEmptyURL)
@@ -68,7 +71,8 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-
+	
+	utils.SugaredLogger.Debugln("(root)/ PostHandler() successfully saved", bodyS)
 	fullID := fmt.Sprint("http://", config.Address.BaseURL, "/", id)
 
 	w.Header().Add("Content-Type", "text/plain")

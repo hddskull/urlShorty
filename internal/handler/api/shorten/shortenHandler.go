@@ -23,7 +23,6 @@ type (
 )
 
 func PostHandler(w http.ResponseWriter, r *http.Request) {
-	utils.SugaredLogger.Debugln("shorten/ PostHandler() called")
 	w.Header().Add("Content-Type", "application/json")
 	reader := r.Body
 
