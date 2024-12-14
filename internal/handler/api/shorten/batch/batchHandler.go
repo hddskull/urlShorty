@@ -34,8 +34,7 @@ func BatchHandler(w http.ResponseWriter, r *http.Request) {
 		gz, err := gzip.NewReader(r.Body)
 		if err != nil {
 			utils.SugaredLogger.Debugln("BatchHandler gzip decompression error:", err)
-			formattedError := custom.ErrorResponseModel{Message: err.Error()}
-			custom.JSONError(w, formattedError, http.StatusInternalServerError)
+			custom.JSONError(w, err, http.StatusInternalServerError)
 		}
 		reader = gz
 	}
@@ -46,8 +45,7 @@ func BatchHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.NewDecoder(reader).Decode(&reqBatch); err != nil {
 		utils.SugaredLogger.Debugln("BatchHandler decoding error:", err)
-		formattedError := custom.ErrorResponseModel{Message: err.Error()}
-		custom.JSONError(w, formattedError, http.StatusBadRequest)
+		custom.JSONError(w, err, http.StatusBadRequest)
 		return
 	}
 
@@ -55,26 +53,23 @@ func BatchHandler(w http.ResponseWriter, r *http.Request) {
 	storageModels, err := validateAndConvertBatch(reqBatch)
 	if err != nil {
 		utils.SugaredLogger.Debugln("BatchHandler validation or conversion error:", err)
-		formattedError := custom.ErrorResponseModel{Message: err.Error()}
-		custom.JSONError(w, formattedError, http.StatusBadRequest)
+		custom.JSONError(w, err, http.StatusBadRequest)
 		return
 	}
 
 	//save batch
-	savedModels, err := storage.Current.SaveBatch(r.Context(), storageModels)
+	err = storage.Current.SaveBatch(r.Context(), storageModels)
 	if err != nil {
 		utils.SugaredLogger.Debugln("BatchHandler saving to storage error:", err)
-		formattedError := custom.ErrorResponseModel{Message: err.Error()}
-		custom.JSONError(w, formattedError, http.StatusInternalServerError)
+		custom.JSONError(w, err, http.StatusInternalServerError)
 		return
 	}
 
 	//convert to response model
-	savedBatch, err := convertToResponseModel(savedModels)
+	savedBatch, err := convertToResponseModel(storageModels)
 	if err != nil {
 		utils.SugaredLogger.Debugln("BatchHandler validation or conversion error:", err)
-		formattedError := custom.ErrorResponseModel{Message: err.Error()}
-		custom.JSONError(w, formattedError, http.StatusBadRequest)
+		custom.JSONError(w, err, http.StatusInternalServerError)
 		return
 	}
 
@@ -83,8 +78,7 @@ func BatchHandler(w http.ResponseWriter, r *http.Request) {
 	err = json.NewEncoder(w).Encode(savedBatch)
 	if err != nil {
 		utils.SugaredLogger.Debugln("BatchHandler encoding error:", err)
-		formattedError := custom.ErrorResponseModel{Message: err.Error()}
-		custom.JSONError(w, formattedError, http.StatusInternalServerError)
+		custom.JSONError(w, err, http.StatusInternalServerError)
 		return
 	}
 }

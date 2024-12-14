@@ -39,13 +39,13 @@ func (ts TemporaryStorage) Save(ctx context.Context, u string) (string, error) {
 	return id, nil
 }
 
-func (ts TemporaryStorage) SaveBatch(ctx context.Context, arr []model.StorageModel) ([]model.StorageModel, error) {
+func (ts TemporaryStorage) SaveBatch(ctx context.Context, arr []model.StorageModel) error {
 
 	for _, v := range arr {
 		ts.urls[v.UUID] = v.OriginalURL
 	}
 
-	return arr, nil
+	return nil
 }
 
 func (ts TemporaryStorage) Get(ctx context.Context, id string) (string, error) {

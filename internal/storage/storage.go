@@ -11,7 +11,7 @@ type Storage interface {
 	Setup() error
 	Close() error
 	Save(ctx context.Context, u string) (string, error)
-	SaveBatch(ctx context.Context, arr []model.StorageModel) ([]model.StorageModel, error)
+	SaveBatch(ctx context.Context, arr []model.StorageModel) error
 	Get(ctx context.Context, id string) (string, error)
 	Ping(ctx context.Context) error
 }

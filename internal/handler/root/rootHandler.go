@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/hddskull/urlShorty/internal/storage"
+	"github.com/hddskull/urlShorty/internal/utils"
 	"github.com/hddskull/urlShorty/tools/custom"
 	"io"
 	"net/http"
@@ -48,6 +49,12 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	bodyS := string(bodyB)
+
+	if bodyS == "" {
+		utils.SugaredLogger.Debugln("Save() empty arg:", custom.ErrEmptyURL)
+		custom.JSONError(w, custom.ErrEmptyURL, http.StatusBadRequest)
+	}
+
 	id, err := storage.Current.Save(r.Context(), bodyS)
 	if err != nil {
 		var uvError *custom.UniqueViolationError

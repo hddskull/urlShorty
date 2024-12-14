@@ -65,10 +65,6 @@ func (ps *PostgresStorage) Close() error {
 
 func (ps *PostgresStorage) Save(ctx context.Context, u string) (string, error) {
 	//check that url isn't empty
-	if u == "" {
-		utils.SugaredLogger.Debugln("Save() empty arg:", custom.ErrEmptyURL)
-		return "", custom.ErrEmptyURL
-	}
 
 	//create model
 	newModel, err := model.NewFileStorageModel(u, "")
@@ -121,12 +117,12 @@ func (ps *PostgresStorage) Save(ctx context.Context, u string) (string, error) {
 	return newModel.ShortURL, nil
 }
 
-func (ps *PostgresStorage) SaveBatch(ctx context.Context, arr []model.StorageModel) ([]model.StorageModel, error) {
+func (ps *PostgresStorage) SaveBatch(ctx context.Context, arr []model.StorageModel) error {
 
 	//create transaction
 	tx, err := dbConnection.Begin()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	//query
@@ -138,18 +134,18 @@ func (ps *PostgresStorage) SaveBatch(ctx context.Context, arr []model.StorageMod
 		if err != nil {
 			//on error roll back
 			tx.Rollback()
-			return nil, err
+			return err
 		}
 	}
 
 	//commit
 	err = tx.Commit()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
 	//if transaction successful return models
-	return arr, nil
+	return nil
 }
 
 func (ps *PostgresStorage) Get(ctx context.Context, id string) (string, error) {
@@ -171,9 +167,9 @@ func (ps *PostgresStorage) Ping(ctx context.Context) error {
 	return err
 }
 
-func handleUniqueViolation(originalURL string) error {
+func handleUniqueViolation(ctx context.Context, originalURL string) error {
 	query := "SELECT shortURL FROM urls WHERE originalURL = $1;"
-	row := dbConnection.QueryRowContext(context.Background(), query, originalURL)
+	row := dbConnection.QueryRowContext(ctx, query, originalURL)
 	var shortURL string
 	err := row.Scan(&shortURL)
 	if err != nil {

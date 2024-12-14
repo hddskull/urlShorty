@@ -83,13 +83,13 @@ func (fs FileStorage) Save(ctx context.Context, u string) (string, error) {
 	return model.ShortURL, nil
 }
 
-func (fs FileStorage) SaveBatch(ctx context.Context, arr []model.StorageModel) ([]model.StorageModel, error) {
+func (fs FileStorage) SaveBatch(ctx context.Context, arr []model.StorageModel) error {
 	err := fs.saveBatchToFile(&arr)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return arr, nil
+	return nil
 }
 
 func (fs FileStorage) Get(ctx context.Context, id string) (string, error) {

@@ -47,9 +47,10 @@ func NoURLBy(id string) error {
 }
 
 // JSONError equivalent to http.Error(...), but content type is "application/json"
-func JSONError(w http.ResponseWriter, err interface{}, code int) {
+func JSONError(w http.ResponseWriter, err error, code int) {
+	formattedError := ErrorResponseModel{Message: err.Error()}
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.WriteHeader(code)
-	json.NewEncoder(w).Encode(err)
+	json.NewEncoder(w).Encode(formattedError)
 }
