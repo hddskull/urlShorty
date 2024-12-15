@@ -51,8 +51,6 @@ func (ps *PostgresStorage) Setup() error {
 	if err != nil {
 		return err
 	}
-	//,
-	//CONSTRAINT urls_originalurl_uindex UNIQUE (originalURL)
 	// Debug: insert test data into DB here
 
 	return nil
@@ -67,7 +65,6 @@ func (ps *PostgresStorage) Close() error {
 }
 
 func (ps *PostgresStorage) Save(ctx context.Context, u string) (string, error) {
-	utils.SugaredLogger.Debugln("Save() called")
 	//create model
 	newModel, err := model.NewFileStorageModel(u, "")
 	if err != nil {
@@ -79,10 +76,6 @@ func (ps *PostgresStorage) Save(ctx context.Context, u string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
-	//write query
-	//query := "INSERT INTO urls (uuid, shortURL, originalURL) VALUES ($1, $2, $3);" // ON CONFLICT DO NOTHING;"
-	//res, err := tx.ExecContext(ctx, query, newModel.UUID, newModel.ShortURL, newModel.OriginalURL)
 
 	//NewQuery
 	query := `
@@ -167,16 +160,4 @@ func (ps *PostgresStorage) Ping(ctx context.Context) error {
 		utils.SugaredLogger.Errorln(err)
 	}
 	return err
-}
-
-func handleUniqueViolation(ctx context.Context, originalURL string) error {
-	query := "SELECT shortURL FROM urls WHERE originalURL = $1;"
-	row := dbConnection.QueryRowContext(ctx, query, originalURL)
-	var shortURL string
-	err := row.Scan(&shortURL)
-	if err != nil {
-		return err
-	}
-
-	return custom.NewUniqueViolationError(fmt.Errorf("duplicate of %s", originalURL), shortURL)
 }

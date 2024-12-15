@@ -58,7 +58,9 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 		var uvError *custom.UniqueViolationError
 		if errors.As(err, &uvError) {
 			fullID := fmt.Sprint("http://", config.Address.BaseURL, "/", uvError.ShortURL)
-			http.Error(w, fullID, http.StatusConflict)
+			w.Header().Add("Content-Type", "text/plain")
+			w.WriteHeader(http.StatusConflict)
+			w.Write([]byte(fullID))
 			return
 		}
 
