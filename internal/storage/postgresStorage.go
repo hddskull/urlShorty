@@ -43,13 +43,16 @@ func (ps *PostgresStorage) Setup() error {
 	CREATE TABLE IF NOT EXISTS urls (
 		uuid UUID PRIMARY KEY,
 		shortURL TEXT NOT NULL,
-		originalURL TEXT NOT NULL
+		originalURL TEXT NOT NULL UNIQUE,
+		created_at TIMESTAMP NOT NULL DEFAULT now(),
+	    updated_at TIMESTAMP NOT NULL DEFAULT now()
 	);`
 	_, err = dbConnection.ExecContext(ctx, tableQuery)
 	if err != nil {
 		return err
 	}
-
+	//,
+	//CONSTRAINT urls_originalurl_uindex UNIQUE (originalURL)
 	// Debug: insert test data into DB here
 
 	return nil
@@ -78,30 +81,30 @@ func (ps *PostgresStorage) Save(ctx context.Context, u string) (string, error) {
 	}
 
 	//write query
-	//query := "INSERT INTO urls (uuid, shortURL, originalURL) VALUES ($1, $2, $3) ON CONFLICT DO NOTHING;"
+	//query := "INSERT INTO urls (uuid, shortURL, originalURL) VALUES ($1, $2, $3);" // ON CONFLICT DO NOTHING;"
 	//res, err := tx.ExecContext(ctx, query, newModel.UUID, newModel.ShortURL, newModel.OriginalURL)
 
 	//NewQuery
 	query := `
 		INSERT INTO urls (uuid, shortURL, originalURL)
 			VALUES ($1, $2, $3)
-			ON CONFLICT (originalURL) 
+			ON CONFLICT (originalURL)
 			DO UPDATE SET
-    			originalURL=EXCLUDED.originalURL
-			RETURNING shortURL != $2, shortURL
+				updated_at = now()
+			RETURNING (created_at = updated_at) as is_new, shortURL
 	`
 
 	row := dbConnection.QueryRowContext(ctx, query, newModel.UUID, newModel.ShortURL, newModel.OriginalURL)
-	var isConflict bool
+	var isNew bool
 	var shortURL string
-	err = row.Scan(&isConflict, &shortURL)
-	utils.SugaredLogger.Debugln("Save(): isConflict:", isConflict, "|shortURL:", shortURL, "|err:", err)
+	err = row.Scan(&isNew, &shortURL)
+	utils.SugaredLogger.Debugln("Save(): isNew:", isNew, "|shortURL:", shortURL, "|err:", err)
 
 	if err != nil {
 		tx.Rollback()
 		return "", err
 	}
-	if isConflict {
+	if !isNew {
 		tx.Rollback()
 		conflictErr := custom.NewUniqueViolationError(fmt.Errorf("duplicate of %s", newModel.OriginalURL), shortURL)
 		return "", conflictErr
