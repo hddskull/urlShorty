@@ -1,8 +1,10 @@
 package storage
 
 import (
+	"context"
 	"encoding/json"
 	"github.com/hddskull/urlShorty/config"
+	"github.com/hddskull/urlShorty/internal/model"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"os"
@@ -20,7 +22,7 @@ func setupTest() error {
 		return err
 	}
 	//create file data
-	m := []fileStorageModel{
+	m := []model.StorageModel{
 		{
 			UUID:        "test",
 			ShortURL:    "t.ru",
@@ -107,7 +109,7 @@ func TestSaveToFile(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("save to file", func(t *testing.T) {
-		model, err := newFileStorageModel("someurl.com")
+		model, err := model.NewFileStorageModel("someurl.com", "")
 		require.NoError(t, err)
 
 		err = testStorage.saveToFile(model)
@@ -146,7 +148,7 @@ func TestFileStorage_Save(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			shortened, err := testStorage.Save(tc.originalURL)
+			shortened, err := testStorage.Save(context.Background(), tc.originalURL)
 			if tc.returnError {
 				assert.Equal(t, "", shortened)
 				require.Error(t, err)
@@ -165,11 +167,11 @@ func TestFileStorage_Get(t *testing.T) {
 	err := setupTest()
 	require.NoError(t, err)
 
-	shortPracticum, err := testStorage.Save("https://practicum.yandex.ru/")
+	shortPracticum, err := testStorage.Save(context.Background(), "https://practicum.yandex.ru/")
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = testStorage.Save("https://yandex.ru/")
+	_, err = testStorage.Save(context.Background(), "https://yandex.ru/")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -195,7 +197,7 @@ func TestFileStorage_Get(t *testing.T) {
 	}
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			original, err := testStorage.Get(tc.shortURL)
+			original, err := testStorage.Get(context.Background(), tc.shortURL)
 
 			if tc.returnError {
 				assert.Equal(t, "", original)

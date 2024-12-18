@@ -3,6 +3,7 @@ package shorten
 import (
 	"compress/gzip"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/hddskull/urlShorty/internal/storage"
 	"net/http"
@@ -29,8 +30,7 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 		gz, err := gzip.NewReader(r.Body)
 		if err != nil {
 			utils.SugaredLogger.Debugln("PostHandler gzip decompression error:", err)
-			formattedError := custom.ErrorResponseModel{Message: err.Error()}
-			custom.JSONError(w, formattedError, http.StatusInternalServerError)
+			custom.JSONError(w, err, http.StatusInternalServerError)
 		}
 		reader = gz
 	}
@@ -39,16 +39,29 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 	reqModel := requestPostModel{}
 	if err := json.NewDecoder(reader).Decode(&reqModel); err != nil {
 		utils.SugaredLogger.Debugln("PostHandler decoding error:", err)
-		formattedError := custom.ErrorResponseModel{Message: err.Error()}
-		custom.JSONError(w, formattedError, http.StatusBadRequest)
+		custom.JSONError(w, err, http.StatusBadRequest)
 		return
 	}
 
-	id, err := storage.Current.Save(reqModel.URL)
+	if reqModel.URL == "" {
+		utils.SugaredLogger.Debugln("Save() empty arg:", custom.ErrEmptyURL)
+		custom.JSONError(w, custom.ErrEmptyURL, http.StatusBadRequest)
+	}
+
+	id, err := storage.Current.Save(r.Context(), reqModel.URL)
 	if err != nil {
 		utils.SugaredLogger.Debugln("PostHandler saving to storage error:", err)
-		formattedError := custom.ErrorResponseModel{Message: err.Error()}
-		custom.JSONError(w, formattedError, http.StatusBadRequest)
+		var uvError *custom.UniqueViolationError
+		if errors.As(err, &uvError) {
+			resModel := responsePostModel{
+				Result: fmt.Sprint("http://", config.Address.BaseURL, "/", uvError.ShortURL),
+			}
+			w.WriteHeader(http.StatusConflict)
+			json.NewEncoder(w).Encode(resModel)
+		} else {
+			custom.JSONError(w, err, http.StatusBadRequest)
+		}
+
 		return
 	}
 
@@ -63,8 +76,7 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 	err = json.NewEncoder(w).Encode(resModel)
 	if err != nil {
 		utils.SugaredLogger.Debugln("PostHandler encoding error:", err)
-		formattedError := custom.ErrorResponseModel{Message: err.Error()}
-		custom.JSONError(w, formattedError, http.StatusBadRequest)
+		custom.JSONError(w, err, http.StatusInternalServerError)
 		return
 	}
 }

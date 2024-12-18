@@ -1,6 +1,8 @@
 package storage
 
 import (
+	"context"
+	"github.com/hddskull/urlShorty/internal/model"
 	"github.com/hddskull/urlShorty/internal/utils"
 	"github.com/hddskull/urlShorty/tools/custom"
 )
@@ -9,16 +11,24 @@ type TemporaryStorage struct {
 	urls map[string]string
 }
 
-// interface compliance check
-var _ Storage = NewTemporaryStorage()
-
 func NewTemporaryStorage() *TemporaryStorage {
 	return &TemporaryStorage{
 		urls: make(map[string]string),
 	}
 }
 
-func (ts TemporaryStorage) Save(u string) (string, error) {
+// Storage interface
+var _ Storage = NewTemporaryStorage()
+
+func (ts TemporaryStorage) Setup() error {
+	return nil
+}
+
+func (ts TemporaryStorage) Close() error {
+	return custom.ErrFuncUnsupported
+}
+
+func (ts TemporaryStorage) Save(ctx context.Context, u string) (string, error) {
 	if u == "" {
 		return "", custom.ErrEmptyURL
 	}
@@ -29,7 +39,16 @@ func (ts TemporaryStorage) Save(u string) (string, error) {
 	return id, nil
 }
 
-func (ts TemporaryStorage) Get(id string) (string, error) {
+func (ts TemporaryStorage) SaveBatch(ctx context.Context, arr []model.StorageModel) error {
+
+	for _, v := range arr {
+		ts.urls[v.UUID] = v.OriginalURL
+	}
+
+	return nil
+}
+
+func (ts TemporaryStorage) Get(ctx context.Context, id string) (string, error) {
 	if id == "" {
 		return "", custom.ErrEmptyURL
 	}
@@ -40,4 +59,8 @@ func (ts TemporaryStorage) Get(id string) (string, error) {
 	}
 
 	return url, nil
+}
+
+func (ts TemporaryStorage) Ping(ctx context.Context) error {
+	return custom.ErrFuncUnsupported
 }

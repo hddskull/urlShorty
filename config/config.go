@@ -11,12 +11,18 @@ import (
 )
 
 const (
+	//Environment property keys
 	serverAddressKey   = "SERVER_ADDRESS"
 	baseURLKey         = "BASE_URL"
 	fileStoragePathKey = "FILE_STORAGE_PATH"
+	dbCredentialsKey   = "DATABASE_DSN"
 
-	defaultAddress         = "localhost:8080"
-	DefaultFileStoragePath = "internal/storage/someStorage.json"
+	//defaults
+	defaultAddress = "localhost:8080"
+
+	//debug
+	debugDBCredentials   = "host=localhost port=5432 user=postgres password=password dbname=urlshorty sslmode=disable"
+	debugFileStoragePath = "internal/storage/someStorage.json"
 )
 
 type appConfig struct {
@@ -27,6 +33,7 @@ type appConfig struct {
 var (
 	Address         appConfig
 	StorageFileName string
+	DBCredentials   string
 )
 
 func Setup() {
@@ -35,7 +42,8 @@ func Setup() {
 		ServerAddress: defaultAddress,
 		BaseURL:       defaultAddress,
 	}
-	StorageFileName = DefaultFileStoragePath
+	StorageFileName = ""
+	DBCredentials = ""
 
 	getConfigFromFlags(&config)
 
@@ -44,9 +52,10 @@ func Setup() {
 	Address = config
 
 	utils.SugaredLogger.Infoln("configuration setup finished")
-	utils.SugaredLogger.Debugln("launch address:  ", Address.ServerAddress)
+	utils.SugaredLogger.Debugln("launch address:", Address.ServerAddress)
 	utils.SugaredLogger.Debugln("redirect address:", Address.BaseURL)
-	utils.SugaredLogger.Debugln("StorageFileName: ", StorageFileName)
+	utils.SugaredLogger.Debugln("StorageFileName:", StorageFileName)
+	utils.SugaredLogger.Debugln("DBCredentials:", DBCredentials)
 }
 
 // getConfigFromFlags will parse flags ["a", "b", "f"]
@@ -84,8 +93,18 @@ func getConfigFromFlags(config *appConfig) {
 		return nil
 	})
 
-	flag.Parse()
+	//flag "d" - credentials for db connect
+	flag.Func("d", "credentials for db connect", func(s string) error {
+		if s == "" {
+			err := custom.ErrEmptyPath
+			utils.SugaredLogger.Debugf("flag %s error: %s", "d", err)
+			return err
+		}
+		DBCredentials = s
+		return nil
+	})
 
+	flag.Parse()
 }
 
 // getConfigFromEnv will parse environment values, if values aren't empty will overwrite default values
@@ -93,7 +112,7 @@ func getConfigFromEnv(config *appConfig) {
 	//server launch
 	launchEnv, err := validateAddress(os.Getenv(serverAddressKey))
 	if err != nil {
-		utils.SugaredLogger.Debugf("env %s err: %s", baseURLKey, err)
+		utils.SugaredLogger.Debugf("env %s err: %s", serverAddressKey, err)
 	}
 	if launchEnv != "" {
 		config.ServerAddress = launchEnv
@@ -108,12 +127,20 @@ func getConfigFromEnv(config *appConfig) {
 		config.BaseURL = redirectEnv
 	}
 
+	//storage path
 	storagePathEnv := os.Getenv(fileStoragePathKey)
-
-	if storagePathEnv != "" {
-		StorageFileName = storagePathEnv
+	if storagePathEnv == "" {
+		utils.SugaredLogger.Debugf("env %s err: %s", fileStoragePathKey, custom.ErrEmptyEnvVar)
 	} else {
-		utils.SugaredLogger.Debugf("env %s err: %s", fileStoragePathKey, err)
+		StorageFileName = storagePathEnv
+	}
+
+	//database credentials
+	dbCredentialsEnv := os.Getenv(dbCredentialsKey)
+	if dbCredentialsEnv == "" {
+		utils.SugaredLogger.Debugf("env %s err: %s", dbCredentialsKey, custom.ErrEmptyEnvVar)
+	} else {
+		StorageFileName = dbCredentialsEnv
 	}
 }
 
