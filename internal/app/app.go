@@ -15,6 +15,7 @@ func Start() {
 	r := chi.NewRouter()
 	r.Use(customMiddleware.WithLogging)
 	r.Use(customMiddleware.CompressResponseGzip)
+	r.Use(customMiddleware.WithJWT)
 
 	r.Route("/", func(r chi.Router) {
 		r.Post("/", root.PostHandler)
