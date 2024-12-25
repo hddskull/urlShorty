@@ -66,6 +66,8 @@ var ErrUnauthorized = errors.New("unauthorized")
 
 var ErrUnknown = errors.New("unknown error")
 
+var ErrNoSessionID = errors.New("no session id")
+
 func NoURLBy(id string) error {
 	return fmt.Errorf("no url by id: %s", id)
 }

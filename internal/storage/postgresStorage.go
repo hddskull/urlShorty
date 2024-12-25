@@ -41,9 +41,10 @@ func (ps *PostgresStorage) Setup() error {
 	ctx := context.Background()
 	tableQuery := `
 	CREATE TABLE IF NOT EXISTS urls (
-		uuid UUID PRIMARY KEY,
+		uuid TEXT PRIMARY KEY,
 		shortURL TEXT NOT NULL,
 		originalURL TEXT NOT NULL UNIQUE,
+		session_id TEXT,
 		created_at TIMESTAMP NOT NULL DEFAULT now(),
 	    updated_at TIMESTAMP NOT NULL DEFAULT now()
 	);`
@@ -65,8 +66,15 @@ func (ps *PostgresStorage) Close() error {
 }
 
 func (ps *PostgresStorage) Save(ctx context.Context, u string) (string, error) {
+	sessionID, ok := model.SessionIDFromContext(ctx)
+	utils.SugaredLogger.Debugln("sessionID:", sessionID, "| ok:", ok)
+
+	if !ok {
+		return "", custom.ErrNoSessionID
+	}
+
 	//create model
-	newModel, err := model.NewFileStorageModel(u, "")
+	newModel, err := model.NewFileStorageModel(u, "", sessionID)
 	if err != nil {
 		return "", err
 	}
@@ -79,15 +87,16 @@ func (ps *PostgresStorage) Save(ctx context.Context, u string) (string, error) {
 
 	//NewQuery
 	query := `
-		INSERT INTO urls (uuid, shortURL, originalURL)
-			VALUES ($1, $2, $3)
+		INSERT INTO urls (uuid, shortURL, originalURL, session_id)
+			VALUES ($1, $2, $3, $4)
 			ON CONFLICT (originalURL)
 			DO UPDATE SET
-				updated_at = now()
+				updated_at = now(),
+				session_id = excluded.session_id
 			RETURNING (created_at = updated_at) as is_new, shortURL
 	`
 
-	row := dbConnection.QueryRowContext(ctx, query, newModel.UUID, newModel.ShortURL, newModel.OriginalURL)
+	row := dbConnection.QueryRowContext(ctx, query, newModel.UUID, newModel.ShortURL, newModel.OriginalURL, newModel.SessionID)
 	var isNew bool
 	var shortURL string
 	err = row.Scan(&isNew, &shortURL)
@@ -113,6 +122,12 @@ func (ps *PostgresStorage) Save(ctx context.Context, u string) (string, error) {
 }
 
 func (ps *PostgresStorage) SaveBatch(ctx context.Context, arr []model.StorageModel) error {
+	sessionID, ok := model.SessionIDFromContext(ctx)
+	utils.SugaredLogger.Debugln("sessionID:", sessionID, "| ok:", ok)
+
+	if !ok {
+		return custom.ErrNoSessionID
+	}
 
 	//create transaction
 	tx, err := dbConnection.Begin()
@@ -121,11 +136,11 @@ func (ps *PostgresStorage) SaveBatch(ctx context.Context, arr []model.StorageMod
 	}
 
 	//query
-	query := "INSERT INTO urls (uuid, shortURL, originalURL) VALUES ($1, $2, $3);"
+	query := "INSERT INTO urls (uuid, shortURL, originalURL, session_id) VALUES ($1, $2, $3, $4);"
 
 	//batch query
 	for _, v := range arr {
-		_, err = tx.ExecContext(ctx, query, v.UUID, v.ShortURL, v.OriginalURL)
+		_, err = tx.ExecContext(ctx, query, v.UUID, v.ShortURL, v.OriginalURL, sessionID)
 		if err != nil {
 			//on error roll back
 			tx.Rollback()
@@ -139,7 +154,6 @@ func (ps *PostgresStorage) SaveBatch(ctx context.Context, arr []model.StorageMod
 		return err
 	}
 
-	//if transaction successful return models
 	return nil
 }
 
@@ -152,6 +166,37 @@ func (ps *PostgresStorage) Get(ctx context.Context, id string) (string, error) {
 		return "", err
 	}
 	return originalURL, nil
+}
+
+func (ps *PostgresStorage) GetUserURLs(ctx context.Context) (*[]model.UserURLModel, error) {
+	sessionID, ok := model.SessionIDFromContext(ctx)
+	utils.SugaredLogger.Debugln("sessionID:", sessionID, "| ok:", ok)
+	if !ok {
+		return nil, custom.ErrNoSessionID
+	}
+
+	query := "SELECT shorturl, originalURL FROM urls WHERE session_id = $1;"
+
+	rows, err := dbConnection.QueryContext(ctx, query, sessionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	urlsSlice := make([]model.UserURLModel, 0)
+	for rows.Next() {
+		var (
+			shortURL    string
+			originalURL string
+		)
+		if err = rows.Scan(&shortURL, &originalURL); err != nil {
+			return nil, err
+		}
+		urlsModel := model.NewUserURLModel(shortURL, originalURL)
+		urlsSlice = append(urlsSlice, *urlsModel)
+	}
+
+	return &urlsSlice, nil
 }
 
 func (ps *PostgresStorage) Ping(ctx context.Context) error {

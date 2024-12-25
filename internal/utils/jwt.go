@@ -13,7 +13,7 @@ const (
 
 type Claims struct {
 	jwt.RegisteredClaims
-	SessionID string `json:"user_id"`
+	SessionID string `json:"session_id"`
 }
 
 func NewJWTString() (string, error) {
@@ -40,16 +40,16 @@ func fromString(tokenString string) (*Claims, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return claims, nil
 }
 
 func GetSessionID(tokenString string) (string, error) {
 	claims, err := fromString(tokenString)
-	SugaredLogger.Debugln("GetSessionID() claims, err :", claims, err)
 	if err != nil {
 		return "", err
 	}
-	SugaredLogger.Debugln("GetSessionID() claims.SessionID", claims.SessionID)
+
 	return claims.SessionID, nil
 }
 
@@ -58,5 +58,6 @@ func IsExpired(tokenString string) bool {
 	if err != nil {
 		return false
 	}
+
 	return claims.ExpiresAt.Before(time.Now())
 }

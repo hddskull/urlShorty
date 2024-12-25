@@ -61,6 +61,10 @@ func (ts TemporaryStorage) Get(ctx context.Context, id string) (string, error) {
 	return url, nil
 }
 
+func (ts TemporaryStorage) GetUserURLs(ctx context.Context) (*[]model.UserURLModel, error) {
+	return nil, custom.ErrFuncUnsupported
+}
+
 func (ts TemporaryStorage) Ping(ctx context.Context) error {
 	return custom.ErrFuncUnsupported
 }

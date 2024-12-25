@@ -109,7 +109,7 @@ func TestSaveToFile(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("save to file", func(t *testing.T) {
-		model, err := model.NewFileStorageModel("someurl.com", "")
+		model, err := model.NewFileStorageModel("someurl.com", "", "someSessionID")
 		require.NoError(t, err)
 
 		err = testStorage.saveToFile(model)

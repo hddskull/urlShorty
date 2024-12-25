@@ -13,6 +13,7 @@ type Storage interface {
 	Save(ctx context.Context, u string) (string, error)
 	SaveBatch(ctx context.Context, arr []model.StorageModel) error
 	Get(ctx context.Context, id string) (string, error)
+	GetUserURLs(ctx context.Context) (*[]model.UserURLModel, error)
 	Ping(ctx context.Context) error
 }
 

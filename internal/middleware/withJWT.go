@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"errors"
+	"github.com/hddskull/urlShorty/internal/model"
 	"github.com/hddskull/urlShorty/internal/utils"
 	"github.com/hddskull/urlShorty/tools/custom"
 	"net/http"
@@ -11,9 +12,9 @@ const cookieName = "ShortenerCookie"
 
 func WithJWT(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		//get cookie
+		cookie, err := getShortenerCookie(r)
 		if r.Method == http.MethodGet {
-			//get cookie
-			cookie, err := getShortenerCookie(r)
 			utils.SugaredLogger.Debugln("getShortenerCookie(...) cookie:", cookie, " | err:", err)
 			if err != nil {
 				var cookieErr *custom.CookieError
@@ -36,7 +37,6 @@ func WithJWT(h http.Handler) http.Handler {
 			//if valid - continue
 
 		} else if r.Method == http.MethodPost {
-			cookie, err := getShortenerCookie(r)
 			//if cookie error or cookie invalid -> create a new one
 			if err != nil || !isCookieValid(cookie) {
 				err = createNewCookie(w, r)
@@ -48,11 +48,19 @@ func WithJWT(h http.Handler) http.Handler {
 
 			//if cookie exists and is valid -> continue
 		}
+		//get cookie again in case if it was re/created
+		cookie, err = getShortenerCookie(r)
+		//get sessionID and insert into context
+		//ignore err, it was checked in isCookieValid() or cookie was recently created
+		sessionID, _ := utils.GetSessionID(cookie.Value)
 
-		utils.SugaredLogger.Debugln("r.Method", r.Method)
-		utils.SugaredLogger.Debugln("WithJWT(...) exiting")
+		//set value into context
+		ctxWithValue := model.NewContextWithSessionID(r.Context(), sessionID)
 
-		h.ServeHTTP(w, r)
+		//replace ctx
+		newR := r.WithContext(ctxWithValue)
+
+		h.ServeHTTP(w, newR)
 	})
 }
 
