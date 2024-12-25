@@ -13,7 +13,9 @@ type StorageModel struct {
 	SessionID   string `json:"session_id"`
 }
 
-var sessionIDKey string = "sessionID"
+type key string
+
+var sessionIDKey key = "sessionID"
 
 func NewFileStorageModel(originalURL, correlationID, sessionID string) (*StorageModel, error) {
 	//create uuid

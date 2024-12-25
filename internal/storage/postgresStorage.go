@@ -196,6 +196,11 @@ func (ps *PostgresStorage) GetUserURLs(ctx context.Context) (*[]model.UserURLMod
 		urlsSlice = append(urlsSlice, *urlsModel)
 	}
 
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
 	return &urlsSlice, nil
 }
 

@@ -50,6 +50,10 @@ func WithJWT(h http.Handler) http.Handler {
 		}
 		//get cookie again in case if it was re/created
 		cookie, err = getShortenerCookie(r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
 		//get sessionID and insert into context
 		//ignore err, it was checked in isCookieValid() or cookie was recently created
 		sessionID, _ := utils.GetSessionID(cookie.Value)
