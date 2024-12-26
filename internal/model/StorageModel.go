@@ -15,7 +15,7 @@ type StorageModel struct {
 
 type key string
 
-var sessionIDKey key = "sessionID"
+var SessionIDKey key = "sessionID"
 
 func NewFileStorageModel(originalURL, correlationID, sessionID string) (*StorageModel, error) {
 	//create uuid
@@ -43,10 +43,10 @@ func NewFileStorageModel(originalURL, correlationID, sessionID string) (*Storage
 }
 
 func NewContextWithSessionID(ctx context.Context, sessionID string) context.Context {
-	return context.WithValue(ctx, sessionIDKey, sessionID)
+	return context.WithValue(ctx, SessionIDKey, sessionID)
 }
 
 func SessionIDFromContext(ctx context.Context) (string, bool) {
-	sessionID, ok := ctx.Value(sessionIDKey).(string)
+	sessionID, ok := ctx.Value(SessionIDKey).(string)
 	return sessionID, ok
 }

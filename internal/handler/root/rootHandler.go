@@ -55,7 +55,7 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id, err := storage.Current.Save(r.Context(), bodyS)
-	utils.SugaredLogger.Debugln("storage.Current.Save(...) ID, err:", id, err)
+	utils.SugaredLogger.Debugf("storage.Current.Save(...) ID: %v|| err: %v", id, err)
 	if err != nil {
 		var uvError *custom.UniqueViolationError
 		if errors.As(err, &uvError) {
