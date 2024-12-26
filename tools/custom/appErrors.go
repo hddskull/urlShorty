@@ -37,7 +37,7 @@ type CookieError struct {
 }
 
 func (e *CookieError) Error() string {
-	return fmt.Sprintf("%v; original: %v", e.Err, e.HTTPStatus)
+	return e.Err.Error()
 }
 
 func (e *CookieError) Unwrap() error {
