@@ -154,7 +154,7 @@ func WithJWT(h http.Handler) http.Handler {
 func userPath(r *http.Request) error {
 	cookie, err := getShortenerCookie(r)
 	if err != nil {
-		return custom.NewCookieError(err, http.StatusInternalServerError)
+		return custom.NewCookieError(err, http.StatusUnauthorized)
 	}
 
 	if !isCookieValid(cookie) {
