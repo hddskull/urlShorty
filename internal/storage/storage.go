@@ -14,6 +14,7 @@ type Storage interface {
 	SaveBatch(ctx context.Context, arr []model.StorageModel) error
 	Get(ctx context.Context, id string) (string, error)
 	GetUserURLs(ctx context.Context) (*[]model.UserURLModel, error)
+	BatchMarkDeleted(sessionID string, shortURLs ...string)
 	Ping(ctx context.Context) error
 }
 

@@ -27,6 +27,7 @@ func Start() {
 		r.Post("/shorten", shorten.PostHandler)
 		r.Post("/shorten/batch", batch.BatchHandler)
 		r.Get("/user/urls", urls.GetHandler)
+		r.Delete("/user/urls", urls.DeleteHandler)
 	})
 
 	err := http.ListenAndServe(config.Address.ServerAddress, r)

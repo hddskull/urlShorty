@@ -44,6 +44,7 @@ func (ps *PostgresStorage) Setup() error {
 		uuid TEXT PRIMARY KEY,
 		shortURL TEXT NOT NULL,
 		originalURL TEXT NOT NULL UNIQUE,
+		is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
 		session_id TEXT,
 		created_at TIMESTAMP NOT NULL DEFAULT now(),
 	    updated_at TIMESTAMP NOT NULL DEFAULT now()
@@ -158,12 +159,16 @@ func (ps *PostgresStorage) SaveBatch(ctx context.Context, arr []model.StorageMod
 }
 
 func (ps *PostgresStorage) Get(ctx context.Context, id string) (string, error) {
-	query := "SELECT originalURL FROM urls WHERE shortURL = $1;"
+	query := "SELECT originalURL, is_deleted FROM urls WHERE shortURL = $1;"
 	row := dbConnection.QueryRowContext(ctx, query, id)
 	var originalURL string
-	err := row.Scan(&originalURL)
+	var isDeleted bool
+	err := row.Scan(&originalURL, &isDeleted)
 	if err != nil {
 		return "", err
+	}
+	if isDeleted {
+		return "", custom.ErrIsDeleted
 	}
 	return originalURL, nil
 }
@@ -202,6 +207,38 @@ func (ps *PostgresStorage) GetUserURLs(ctx context.Context) (*[]model.UserURLMod
 	}
 
 	return &urlsSlice, nil
+}
+
+func (ps *PostgresStorage) BatchMarkDeleted(sessionID string, shortURLs ...string) {
+
+	tx, err := dbConnection.Begin()
+	if err != nil {
+		utils.SugaredLogger.Debugln("err on dbConnection.Begin()")
+
+		return //err
+	}
+
+	query := "UPDATE urls SET is_deleted = TRUE WHERE session_id = $1 AND shortURL = $2;"
+
+	for _, shortURL := range shortURLs {
+		utils.SugaredLogger.Debugf("shortURL %s, sessionID %s", shortURL, sessionID)
+		_, err = tx.Exec(query, sessionID, shortURL)
+
+		if err != nil {
+			utils.SugaredLogger.Debugln("err on ExecContext:", err)
+			tx.Rollback()
+			return //err
+		}
+	}
+
+	err = tx.Commit()
+	if err != nil {
+		utils.SugaredLogger.Debugln("err on commit")
+
+		return //err
+	}
+	utils.SugaredLogger.Debugln("batch delete success:")
+	return //nil
 }
 
 func (ps *PostgresStorage) Ping(ctx context.Context) error {

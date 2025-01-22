@@ -20,6 +20,10 @@ func GetHandler(w http.ResponseWriter, r *http.Request) {
 
 	url, err := storage.Current.Get(r.Context(), id)
 	if err != nil {
+		if errors.Is(custom.ErrIsDeleted, err) {
+			w.WriteHeader(http.StatusGone)
+			return
+		}
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

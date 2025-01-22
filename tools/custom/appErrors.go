@@ -59,7 +59,7 @@ var ErrEmptyPath = errors.New("empty path")
 var ErrEmptyEnvVar = errors.New("empty environment variable")
 var ErrEmptyBatch = errors.New("empty batch")
 var ErrInvalidBatch = errors.New("invalid model in batch")
-
+var ErrIsDeleted = errors.New("url is deleted")
 var ErrFuncUnsupported = errors.New("current implementation doesn't support such function")
 
 var ErrUnauthorized = errors.New("unauthorized")

@@ -119,6 +119,9 @@ func (fs FileStorage) Ping(ctx context.Context) error {
 	return custom.ErrFuncUnsupported
 }
 
+func (fs FileStorage) BatchMarkDeleted(sessionID string, shortURLs ...string) {
+}
+
 // Supporting methods
 
 func (fs FileStorage) readAllFromFile() ([]model.StorageModel, error) {
