@@ -31,26 +31,6 @@ func NewUniqueViolationError(err error, shortURL string) error {
 	}
 }
 
-type CookieError struct {
-	Err        error
-	HTTPStatus int
-}
-
-func (e *CookieError) Error() string {
-	return e.Err.Error()
-}
-
-func (e *CookieError) Unwrap() error {
-	return e.Err
-}
-
-func NewCookieError(err error, httpStatus int) error {
-	return &CookieError{
-		Err:        err,
-		HTTPStatus: httpStatus,
-	}
-}
-
 var ErrNoServerAddress = errors.New("no server address")
 var ErrInvalidAddressPattern = errors.New("invalid host:port")
 
@@ -59,14 +39,8 @@ var ErrEmptyPath = errors.New("empty path")
 var ErrEmptyEnvVar = errors.New("empty environment variable")
 var ErrEmptyBatch = errors.New("empty batch")
 var ErrInvalidBatch = errors.New("invalid model in batch")
-var ErrIsDeleted = errors.New("url is deleted")
+
 var ErrFuncUnsupported = errors.New("current implementation doesn't support such function")
-
-var ErrUnauthorized = errors.New("unauthorized")
-
-var ErrUnknown = errors.New("unknown error")
-
-var ErrNoSessionID = errors.New("no session id")
 
 func NoURLBy(id string) error {
 	return fmt.Errorf("no url by id: %s", id)

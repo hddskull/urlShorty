@@ -1,10 +1,8 @@
 package shorten
 
 import (
-	"context"
 	"encoding/json"
 	"github.com/hddskull/urlShorty/config"
-	"github.com/hddskull/urlShorty/internal/model"
 	"github.com/hddskull/urlShorty/internal/storage"
 	"net/http"
 	"net/http/httptest"
@@ -106,7 +104,6 @@ func TestPostHandler(t *testing.T) {
 			},
 		},
 	}
-	ctxWithSessionID := context.WithValue(context.Background(), model.SessionIDKey, "testKey")
 
 	for _, tc := range tests {
 
@@ -114,7 +111,7 @@ func TestPostHandler(t *testing.T) {
 			jsonBytes, _ := json.Marshal(tc.requestModel)
 			jsonString := string(jsonBytes)
 
-			req := httptest.NewRequest(tc.method, tc.url, strings.NewReader(jsonString)).WithContext(ctxWithSessionID)
+			req := httptest.NewRequest(tc.method, tc.url, strings.NewReader(jsonString))
 			req.Header.Set("Content-Type", tc.contentType)
 
 			w := httptest.NewRecorder()
