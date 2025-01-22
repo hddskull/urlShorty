@@ -237,8 +237,7 @@ func (ps *PostgresStorage) BatchMarkDeleted(sessionID string, shortURLs ...strin
 
 		return //err
 	}
-	utils.SugaredLogger.Debugln("batch delete success:")
-	return //nil
+	utils.SugaredLogger.Debugln("batch delete success")
 }
 
 func (ps *PostgresStorage) Ping(ctx context.Context) error {
