@@ -20,6 +20,10 @@ func GetHandler(w http.ResponseWriter, r *http.Request) {
 
 	url, err := storage.Current.Get(r.Context(), id)
 	if err != nil {
+		if errors.Is(err, custom.ErrIsDeleted) {
+			w.WriteHeader(http.StatusGone)
+			return
+		}
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
@@ -31,6 +35,7 @@ func GetHandler(w http.ResponseWriter, r *http.Request) {
 
 func PostHandler(w http.ResponseWriter, r *http.Request) {
 	reader := r.Body
+	utils.SugaredLogger.Debugln("PostHandler()")
 
 	if r.Header.Get(`Content-Encoding`) == `gzip` {
 		gz, err := gzip.NewReader(r.Body)
@@ -54,6 +59,7 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id, err := storage.Current.Save(r.Context(), bodyS)
+	utils.SugaredLogger.Debugf("storage.Current.Save(...) ID: %v|| err: %v", id, err)
 	if err != nil {
 		var uvError *custom.UniqueViolationError
 		if errors.As(err, &uvError) {

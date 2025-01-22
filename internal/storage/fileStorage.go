@@ -69,18 +69,24 @@ func (fs FileStorage) Save(ctx context.Context, u string) (string, error) {
 		return existingModel.ShortURL, nil
 	}
 
-	model, err := model.NewFileStorageModel(u, "")
+	sessionID, ok := model.SessionIDFromContext(ctx)
+
+	if !ok {
+		return "", custom.ErrNoSessionID
+	}
+
+	storageModel, err := model.NewFileStorageModel(u, "", sessionID)
 	if err != nil {
 		return "", err
 	}
 
 	//save model
-	err = fs.saveToFile(model)
+	err = fs.saveToFile(storageModel)
 	if err != nil {
 		return "", err
 	}
 
-	return model.ShortURL, nil
+	return storageModel.ShortURL, nil
 }
 
 func (fs FileStorage) SaveBatch(ctx context.Context, arr []model.StorageModel) error {
@@ -105,8 +111,15 @@ func (fs FileStorage) Get(ctx context.Context, id string) (string, error) {
 	return originalURL, nil
 }
 
+func (fs FileStorage) GetUserURLs(ctx context.Context) (*[]model.UserURLModel, error) {
+	return nil, custom.ErrFuncUnsupported
+}
+
 func (fs FileStorage) Ping(ctx context.Context) error {
 	return custom.ErrFuncUnsupported
+}
+
+func (fs FileStorage) BatchMarkDeleted(sessionID string, shortURLs ...string) {
 }
 
 // Supporting methods

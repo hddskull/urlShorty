@@ -109,7 +109,7 @@ func TestSaveToFile(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Run("save to file", func(t *testing.T) {
-		model, err := model.NewFileStorageModel("someurl.com", "")
+		model, err := model.NewFileStorageModel("someurl.com", "", "someSessionID")
 		require.NoError(t, err)
 
 		err = testStorage.saveToFile(model)
@@ -146,9 +146,11 @@ func TestFileStorage_Save(t *testing.T) {
 		},
 	}
 
+	ctxWithSessionID := context.WithValue(context.Background(), model.SessionIDKey, "testKey")
+
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			shortened, err := testStorage.Save(context.Background(), tc.originalURL)
+			shortened, err := testStorage.Save(ctxWithSessionID, tc.originalURL)
 			if tc.returnError {
 				assert.Equal(t, "", shortened)
 				require.Error(t, err)
@@ -167,11 +169,13 @@ func TestFileStorage_Get(t *testing.T) {
 	err := setupTest()
 	require.NoError(t, err)
 
-	shortPracticum, err := testStorage.Save(context.Background(), "https://practicum.yandex.ru/")
+	ctxWithSessionID := context.WithValue(context.Background(), model.SessionIDKey, "testKey")
+
+	shortPracticum, err := testStorage.Save(ctxWithSessionID, "https://practicum.yandex.ru/")
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = testStorage.Save(context.Background(), "https://yandex.ru/")
+	_, err = testStorage.Save(ctxWithSessionID, "https://yandex.ru/")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -195,9 +199,10 @@ func TestFileStorage_Get(t *testing.T) {
 			returnError: true,
 		},
 	}
+
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			original, err := testStorage.Get(context.Background(), tc.shortURL)
+			original, err := testStorage.Get(ctxWithSessionID, tc.shortURL)
 
 			if tc.returnError {
 				assert.Equal(t, "", original)

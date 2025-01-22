@@ -1,18 +1,30 @@
 package model
 
-import "github.com/hddskull/urlShorty/internal/utils"
+import (
+	"context"
+	"github.com/hddskull/urlShorty/internal/utils"
+	"github.com/hddskull/urlShorty/tools/custom"
+)
 
 type StorageModel struct {
 	UUID        string `json:"uuid"`
 	ShortURL    string `json:"short_url"`
 	OriginalURL string `json:"original_url"`
+	SessionID   string `json:"session_id"`
 }
 
-func NewFileStorageModel(originalURL, uuid string) (*StorageModel, error) {
+type key string
+
+var SessionIDKey key = "sessionID"
+
+func NewFileStorageModel(originalURL, correlationID, sessionID string) (*StorageModel, error) {
 	//create uuid
 	var err error
-	if uuid == "" {
-		uuid, err = utils.GenerateUUID()
+	if correlationID == "" {
+		correlationID, err = utils.GenerateUUID()
+	}
+	if sessionID == "" {
+		return nil, custom.ErrNoSessionID
 	}
 
 	if err != nil {
@@ -23,8 +35,18 @@ func NewFileStorageModel(originalURL, uuid string) (*StorageModel, error) {
 	shortURL := utils.GenerateShortKey()
 
 	return &StorageModel{
-		UUID:        uuid,
+		UUID:        correlationID,
 		ShortURL:    shortURL,
 		OriginalURL: originalURL,
+		SessionID:   sessionID,
 	}, nil
+}
+
+func NewContextWithSessionID(ctx context.Context, sessionID string) context.Context {
+	return context.WithValue(ctx, SessionIDKey, sessionID)
+}
+
+func SessionIDFromContext(ctx context.Context) (string, bool) {
+	sessionID, ok := ctx.Value(SessionIDKey).(string)
+	return sessionID, ok
 }

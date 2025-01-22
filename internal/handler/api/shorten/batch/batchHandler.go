@@ -2,6 +2,7 @@ package batch
 
 import (
 	"compress/gzip"
+	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/hddskull/urlShorty/config"
@@ -50,7 +51,7 @@ func BatchHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//validate and convert to storage model
-	storageModels, err := validateAndConvertBatch(reqBatch)
+	storageModels, err := validateAndConvertBatch(r.Context(), reqBatch)
 	if err != nil {
 		utils.SugaredLogger.Debugln("BatchHandler validation or conversion error:", err)
 		custom.JSONError(w, err, http.StatusBadRequest)
@@ -83,10 +84,16 @@ func BatchHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func validateAndConvertBatch(batch requestBatch) ([]model.StorageModel, error) {
+func validateAndConvertBatch(ctx context.Context, batch requestBatch) ([]model.StorageModel, error) {
 	//check if batch contains elements
 	if len(batch) == 0 {
 		return nil, custom.ErrEmptyBatch
+	}
+
+	sessionID, ok := model.SessionIDFromContext(ctx)
+
+	if !ok {
+		return nil, custom.ErrNoSessionID
 	}
 
 	models := make([]model.StorageModel, len(batch))
@@ -97,7 +104,7 @@ func validateAndConvertBatch(batch requestBatch) ([]model.StorageModel, error) {
 			return nil, custom.ErrInvalidBatch
 		}
 
-		m, err := model.NewFileStorageModel(item.OriginalURL, item.CorrelationID)
+		m, err := model.NewFileStorageModel(item.OriginalURL, item.CorrelationID, sessionID)
 		if err != nil {
 			return nil, err
 		}

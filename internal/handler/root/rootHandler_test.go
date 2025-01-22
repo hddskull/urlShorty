@@ -1,7 +1,9 @@
 package root
 
 import (
+	"context"
 	"github.com/hddskull/urlShorty/config"
+	"github.com/hddskull/urlShorty/internal/model"
 	"github.com/hddskull/urlShorty/internal/storage"
 	"io"
 	"net/http"
@@ -138,11 +140,13 @@ func TestFullRootHandler(t *testing.T) {
 		},
 	}
 
+	ctxWithSessionID := context.WithValue(context.Background(), model.SessionIDKey, "testKey")
+
 	t.Run("Post + Get yandex url", func(t *testing.T) {
 		//post request
 		h := PostHandler
 
-		req := httptest.NewRequest(pc.method, pc.url, strings.NewReader(pc.body))
+		req := httptest.NewRequest(pc.method, pc.url, strings.NewReader(pc.body)).WithContext(ctxWithSessionID)
 		req.Header.Set("Content-Type", "plain/text")
 
 		w := httptest.NewRecorder()
@@ -162,7 +166,7 @@ func TestFullRootHandler(t *testing.T) {
 		// get request
 		h = GetHandler
 
-		req = httptest.NewRequest(gc.method, shortURL, nil)
+		req = httptest.NewRequest(gc.method, shortURL, nil).WithContext(ctxWithSessionID)
 		req.Header.Set("Content-Type", "plain/text")
 
 		w = httptest.NewRecorder()
